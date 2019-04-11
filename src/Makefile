@@ -7,7 +7,7 @@ LDLIBS = -lrt -lncurses
 BOLD=\e[1m
 NC=\e[0m
 
-all: simulador monitor
+all: simulador
 
 clean: 
 	rm -r -f $(TARGET)
