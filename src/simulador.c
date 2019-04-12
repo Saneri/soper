@@ -30,12 +30,58 @@ int nave_atacar(tipo_nave *nave, int targety, int targetx) {
 }
 
 // Mover nave aleatoriamente a las casilla adyacentes
-int nave_mover(tipo_nave *nave) {
-	return -1; // no implementado
+// Direcciones 
+//	0 ---- N
+//	1 ---- E
+//	2 ---- S
+//	3 ---- W
+int nave_mover(tipo_nave *nave, int targety, int targetx){
+	mapa_clean_casilla(tipo_mapa *mapa, nave->posy, nave->posx);
+	mapa_set_nave(tipo_mapa *mapa, tipo_nave nave);
+}
+
+int nave_mover_aleatorio(tipo_nave *nave) {
+	int direccion = rand() % 4;
+	bool selected = false;
+	while(!selected){}
+		switch(direccion) {
+			case 0:
+				if (mapa_is_casilla_vacia(tipo_mapa *mapa, nave->posy + 1, nave->posx){
+					nave_mover(nave, nave->posy + 1, nave->posx);
+					selected = true;
+				}
+				break;
+			case 1:
+				if (mapa_is_casilla_vacia(tipo_mapa *mapa, nave->posy, nave->posx + 1){
+					nave_mover(nave, nave->posy, nave->posx + 1);
+					selected = true;
+				}
+				break;
+			case 2:
+				if (mapa_is_casilla_vacia(tipo_mapa *mapa, nave->posy - 1, nave->posx){
+					nave_mover(nave, nave->posy - 1, nave->posx);
+					selected = true;
+				}
+				break;
+			case 3:
+				if (mapa_is_casilla_vacia(tipo_mapa *mapa, nave->posy, nave->posx - 1){
+					nave_mover(nave, nave->posy, nave->posx - 1);
+					selected = true;
+				}
+				break;
+			default:
+				selected = false					
+				return -1;
+		}
+	}
+	return 0;
 }
 
 // Destruye una nave librando sus recursos
 int nave_destruir(tipo_nave *nave) {
+	nave->vida = 0;
+	nave->viva = false;
+	mapa_clean_casilla(tipo_mapa *mapa, nave->posy, nave->posx);
 	return -1; // no implementado
 }
 
