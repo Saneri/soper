@@ -21,10 +21,14 @@
 #include <mapa.h>
 
 #define SHM_MAPA "/shm_mapa_SOPER"
+#define MQ_NAME "/mq_simulador_SOPER"
 
 int main() {
-	int ret=0;
-	exit(ret);
+	if (init() < 0) {
+		// Librar recursos
+		return -1;
+	}
+	return 0;
 }
 
 // Manojador de la señal SIGTERM (ctrl + C)
@@ -33,6 +37,39 @@ void manejador_SIGINT(int sig) {
 }
 
 /*
+ * @brief 
+ * @param i el numero identificador del jefe
+ */
+void ejecutar_jefe(int i) {
+	
+	// Iniciar tuberia para escuchar a simulador (el proceso padre)
+	int fd[2];
+	int pipe_status = pipe(fd);
+	if (pipe_status < 0) {
+		perror("(pipe) No se pudo inicializar pipe del jefe");
+		exit(EXIT_FAILURE);
+	}
+	close(fd[1]); // Cierra la salida del pipe
+
+}
+
+void proceso_simulador() {
+	
+	// Inicializar message queue
+	printf("Simulador gestionando MQ");
+       	struct mq_attr attributes = {
+		.mq_flags = 0,
+		.mq_maxmsg = 10,
+		.mq_curmsgs = 0,
+		.mq_msgsize = sizeof(char) * 80 
+	};	
+	mqd_t queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
+	if (queue == (mqd_t) -1) {
+		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
+	}
+}
+
+ /*
  * @brief Inicializar la simulación
  * @return 0 si todo ha sido bien, -1 en el caso de error
  */
@@ -42,7 +79,25 @@ int init() {
 	int fd_shm;
 	tipo_mapa* mapa;
 
+	
+	// Inicializar memoria compartida para la mapa
+	printf("Simulador gestionando SHM");
+	fd_shm = shm_open(SHM_MAPA, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+	if (fd_shm < 0) {
+		perror("(shm_open) No se pudo inicializar la memoria compartida");
+		return -1;
+	}
+	
+	// Map la memoria compartida para el uso de este proceso
+	printf("Simulador inicializando mapa");  
+	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
+	if (mapa == MAP_FAILED) {
+		perror("(mmap) No se pudo mapear la memoria compartid de mapa");
+		return -1;
+	}
+	
 	// Inicializar el manejador para SIGINT
+	printf("Simulador gestionando senales");
 	act.sa_handler = manejador_SIGINT;
 	int error = sigaction(SIGINT, &act, NULL);
 	if (error < 0) {
@@ -50,19 +105,7 @@ int init() {
 		return -1;
 	}
 
-	// Inicializar memoria compartida para la mapa
-	fd_shm = shm_open(SHM_MAPA, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
-	if (fd_shm < 0) {
-		perror("(shm_open) No se pudo inicializar la memoria compartida");
-		return -1;
-	}
 	
-	// Map la memoria compartida para el uso de este proceso  
-	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
-	if (mapa == MAP_FAILED) {
-		perror("(mmap) No se pudo mapear la memoria compartid de mapa");
-		return -1;
-	}
 	
 	// Crear procesos jefes
 	pid_t pid;
@@ -73,9 +116,13 @@ int init() {
 			return -1;
 		} else if (pid == 0) {
 			// Jefe (proceso hijo)
+			ejecutar_jefe(i);
+			exit(EXIT_SUCCESS);
 		} else {
 			// Simulador (proceso padre)
+			
 		}
+		proceso_simulador();
 	}
 
 	return 0;
