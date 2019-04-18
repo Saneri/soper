@@ -23,17 +23,39 @@
 #define SHM_MAPA "/shm_mapa_SOPER"
 #define MQ_NAME "/mq_simulador_SOPER"
 
-int main() {
-	if (init() < 0) {
-		// Librar recursos
-		return -1;
+// Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
+int recurso_shared_memory = 0; 
+int recurso_mmap = 0;
+int recurso_mqueue = 0;
+int recurso_pipe = 0;
+
+
+/*
+ * @brief rutina para librar todas las recursos que ha utilizado este proceso
+ */
+void librar_recursos() {
+	/*if (recurso_shared_memory) {
+		shm_close();
+		shm_unlink();
+	}	
+	if (recurso_mmap) {
+		munmap();
 	}
-	return 0;
+	if (recurso_mqueue) {
+		mq_close();
+		mq_unlink();
+	}
+	if (recurso_pipe) {
+		
+	}*/
+	printf("Librando recursos\n");
 }
 
-// Manojador de la señal SIGTERM (ctrl + C)
+/*
+ * @brief Manejador de la señal SIGTERM (ctrl + C)
+ */
 void manejador_SIGINT(int sig) {
-
+	
 }
 
 /*
@@ -53,10 +75,13 @@ void ejecutar_jefe(int i) {
 
 }
 
+/*
+ * @brief La rutina del proceso simulador que es el padre de los jefes 
+ */
 void proceso_simulador() {
 	
 	// Inicializar message queue
-	printf("Simulador gestionando MQ");
+	printf("Simulador gestionando MQ\n");
        	struct mq_attr attributes = {
 		.mq_flags = 0,
 		.mq_maxmsg = 10,
@@ -67,6 +92,18 @@ void proceso_simulador() {
 	if (queue == (mqd_t) -1) {
 		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
 	}
+	
+	
+
+	
+	
+	printf("Simulador: Nuevo TURNO\n");
+	// Rutina de turnos aqui
+	
+
+
+
+	
 }
 
  /*
@@ -81,23 +118,25 @@ int init() {
 
 	
 	// Inicializar memoria compartida para la mapa
-	printf("Simulador gestionando SHM");
+	printf("Simulador gestionando SHM\n");
 	fd_shm = shm_open(SHM_MAPA, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
 	if (fd_shm < 0) {
 		perror("(shm_open) No se pudo inicializar la memoria compartida");
 		return -1;
 	}
-	
+	recurso_shared_memory = 1;
+
 	// Map la memoria compartida para el uso de este proceso
-	printf("Simulador inicializando mapa");  
+	printf("Simulador inicializando mapa\n");  
 	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
 	if (mapa == MAP_FAILED) {
 		perror("(mmap) No se pudo mapear la memoria compartid de mapa");
 		return -1;
 	}
+	recurso_mmap = 1;
 	
 	// Inicializar el manejador para SIGINT
-	printf("Simulador gestionando senales");
+	printf("Simulador gestionando senales\n");
 	act.sa_handler = manejador_SIGINT;
 	int error = sigaction(SIGINT, &act, NULL);
 	if (error < 0) {
@@ -122,7 +161,12 @@ int init() {
 			// Simulador (proceso padre)
 			
 		}
-		proceso_simulador();
+	}
+	proceso_simulador();
+
+	// Espera a todos los jefes
+	for (int i=0; i<N_EQUIPOS; i++) {
+		wait(NULL);
 	}
 
 	return 0;
@@ -141,4 +185,15 @@ int nave_mover(tipo_nave *nave) {
 // Destruye una nave librando sus recursos
 int nave_destruir(tipo_nave *nave) {
 	return -1; // no implementado
+}
+
+
+int main() {
+	if (init() < 0) {
+		librar_recursos();
+		return -1;
+	}
+
+	librar_recursos();
+	return 0;
 }
