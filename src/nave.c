@@ -14,14 +14,42 @@
 #include <nave.h>
 #include <mapa.h>
 
+tipo_nave crear_nave(int num_jefe,int num_nave){
+	tipo_nave new_nave;
+	new_nave-> vida = VIDA_MAX; 
+	new_nave-> posx = 0; 
+	new_nave-> posy = 0; 
+	new_nave-> equipo = num_jefe; 
+	new_nave-> numNave = num_nave;
+	new_nave-> viva = true; 
+	return new_nave;
 
+}
 // Intenta a atacar a una posicion con la nave elegido
-int nave_atacar(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx) {
-	if(nave->equipo != mapa->casillas[targety][targetx].equipo){
-		mapa_send_misil(mapa, nave->posy, nave->posx, targety, targetx);
-		return 0;
-	} else{
-
+int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
+	int origenx = nave->posx;
+	int origeny = nave->posy;
+	int equipoNave = nave->equipo;
+	int i = -20;
+	while(i < 20){// coordenada x
+		if (origenx + i < MAPA_MAXX && origenx + i < MAPA_MAXX > 0){
+			for(int j = -20; j < 20 ; j++){// coordenada y
+				if (origeny + j < MAPA_MAXY && origeny + j < MAPA_MAXY > 0){
+					tipo_casilla casilla = mapa_get_casilla(mapa, origeny + j, origenx + i);
+					if (casilla->equipo != equipoNave){
+						mapa_send_misil(mapa, origeny, origenx , origeny + j, origenx + i);
+						tipo_nave nave_atacada = mapa_get_nave(mapa, casilla->equipo, casilla->num_nave);
+						if (nave_atacada->vida - ATAQUE_DANO < 0){
+							nave_destruir(mapa, nave_atacada);
+						} else {
+							nave_atacada->vida - ATAQUE_DANO;
+						}
+						return 0;
+					}
+				}
+			}
+		}
+		i++;
 	}
 	return -1; // no implementado
 }
