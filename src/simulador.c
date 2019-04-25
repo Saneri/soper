@@ -27,28 +27,22 @@
 int recurso_shared_memory = 0; 
 int recurso_mmap = 0;
 int recurso_mqueue = 0;
-int recurso_pipe = 0;
+tipo_mapa* mapa;
+mqd_t queue;
+
 
 
 /*
  * @brief rutina para librar todas las recursos que ha utilizado este proceso
  */
-void librar_recursos() {
-	/*if (recurso_shared_memory) {
-		shm_close();
-		shm_unlink();
-	}	
+void librar_recursos_proceso_simulador() {	
+	printf("Librando recursos\n");
 	if (recurso_mmap) {
-		munmap();
+		munmap(mapa, sizeof(*mapa));
 	}
 	if (recurso_mqueue) {
-		mq_close();
-		mq_unlink();
+		mq_close(queue);
 	}
-	if (recurso_pipe) {
-		
-	}*/
-	printf("Librando recursos\n");
 }
 
 /*
@@ -88,7 +82,7 @@ void proceso_simulador() {
 		.mq_curmsgs = 0,
 		.mq_msgsize = sizeof(char) * 80 
 	};	
-	mqd_t queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
+	queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
 	if (queue == (mqd_t) -1) {
 		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
 	}
@@ -114,7 +108,6 @@ int init() {
 
 	struct sigaction act;
 	int fd_shm;
-	tipo_mapa* mapa;
 
 	
 	// Inicializar memoria compartida para la mapa
@@ -190,10 +183,13 @@ int nave_destruir(tipo_nave *nave) {
 
 int main() {
 	if (init() < 0) {
-		librar_recursos();
+		librar_recursos_proceso_simulador();
 		return -1;
 	}
 
-	librar_recursos();
+	librar_recursos_proceso_simulador();
+	
+	shm_unlink(SHM_MAPA);
+	mq_unlink(MQ_NAME);
 	return 0;
 }
