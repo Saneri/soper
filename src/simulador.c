@@ -145,7 +145,6 @@ int init() {
 		} else if (pid == 0) {
 			// Jefe (proceso hijo)
 			ejecutar_jefe(i);
-			exit(EXIT_SUCCESS);
 		} else {
 			// Simulador (proceso padre)
 			
