@@ -20,9 +20,6 @@
 
 #include <mapa.h>
 
-#define SHM_MAPA "/shm_mapa_SOPER"
-#define MQ_NAME "/mq_simulador_SOPER"
-
 // Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
 int recurso_shared_memory = 0; 
 int recurso_mmap = 0;
@@ -33,7 +30,7 @@ mqd_t queue;
 
 
 /*
- * @brief rutina para librar todas las recursos que ha utilizado este proceso
+ * @brief rutina para librar todas las recursos que ha utilizado proceso simulador
  */
 void librar_recursos_proceso_simulador() {	
 	printf("Librando recursos\n");
@@ -108,11 +105,10 @@ int init() {
 
 	struct sigaction act;
 	int fd_shm;
-
 	
 	// Inicializar memoria compartida para la mapa
 	printf("Simulador gestionando SHM\n");
-	fd_shm = shm_open(SHM_MAPA, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+	fd_shm = shm_open(SHM_MAP_NAME, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
 	if (fd_shm < 0) {
 		perror("(shm_open) No se pudo inicializar la memoria compartida");
 		return -1;
@@ -175,7 +171,7 @@ int main() {
 
 	librar_recursos_proceso_simulador();
 	
-	shm_unlink(SHM_MAPA);
+	shm_unlink(SHM_MAP_NAME);
 	mq_unlink(MQ_NAME);
 	return 0;
 }
