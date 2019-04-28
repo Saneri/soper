@@ -18,7 +18,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <mapa.h>
+#include "mapa.h"
+#include "jefe.h"
 
 // Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
 int recurso_shared_memory = 0; 
@@ -49,22 +50,6 @@ void manejador_SIGINT(int sig) {
 	
 }
 
-/*
- * @brief 
- * @param i el numero identificador del jefe
- */
-void ejecutar_jefe(int i) {
-	
-	// Iniciar tuberia para escuchar a simulador (el proceso padre)
-	int fd[2];
-	int pipe_status = pipe(fd);
-	if (pipe_status < 0) {
-		perror("(pipe) No se pudo inicializar pipe del jefe");
-		exit(EXIT_FAILURE);
-	}
-	close(fd[1]); // Cierra la salida del pipe
-
-}
 
 /*
  * @brief La rutina del proceso simulador que es el padre de los jefes 
