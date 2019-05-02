@@ -50,6 +50,16 @@ typedef struct {
 } tipo_mapa;
 
 #define SHM_MAP_NAME "/shm_naves"
+#define MQ_NAME "/mq_simulador"
+
+// Rutina para librar todas las recursos que ha utilizado proceso simulador
+void librar_recursos_proceso_simulador();
+
+// El manejador para la señal SIGTERM (ctrl + C)
+void manejador_SIGINT(int sig);
+
+// La rutina del proceso simulador
+void proceso_simulador();
 
 // Inicializar la simulación
 int init();
