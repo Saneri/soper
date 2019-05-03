@@ -6,6 +6,7 @@
 
 char symbol_equipos[N_EQUIPOS] ={'A','B','C'};
 
+
 int mapa_clean_casilla(tipo_mapa *mapa, int posy, int posx)
 {
 	mapa->casillas[posy][posx].equipo=-1;

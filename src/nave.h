@@ -3,8 +3,8 @@
 
 
 
-
-
+// funcion para cambiar posicion de la nave
+int nave_cambiarposicion(tipo_nave *nave, int posy, int posx);
 // Intenta a atacar a una posicion con la nave elegido
 int nave_atacar(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx);
 

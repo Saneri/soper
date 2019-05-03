@@ -71,30 +71,35 @@ int nave_mover(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx){
 
 int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
 	int direccion = rand() % 4;
+	int nummov = rand() % MOVER_ALCANCE;
 	bool selected = false;
 	while(!selected){}
 		switch(direccion) {
 			case 0:
-				if (mapa_is_casilla_vacia(mapa, nave->posy + 1, nave->posx){
-					nave_mover(nave, nave->posy + 1, nave->posx);
+				if (mapa_is_casilla_vacia(mapa, nave->posy + nummov, nave->posx) && nave->posy + nummov < MAPA_MAXY){
+					nave_mover(nave, nave->posy + nummov, nave->posx);
+					nave_cambiarposicion(nave,nave->posy + nummov, nave->posx);
 					selected = true;
 				}
 				break;
 			case 1:
-				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx + 1){
-					nave_mover(nave, nave->posy, nave->posx + 1);
+				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx + nummov) && nave->posx + nummov < MAPA_MAXX){
+					nave_mover(nave, nave->posy, nave->posx + nummov);
+					nave_cambiarposicion(nave, nave->posy, nave->posx + nummov);
 					selected = true;
 				}
 				break;
 			case 2:
-				if (mapa_is_casilla_vacia(mapa, nave->posy - 1, nave->posx){
-					nave_mover(nave, nave->posy - 1, nave->posx);
+				if (mapa_is_casilla_vacia(mapa, nave->posy - nummov, nave->posx) && nave->posy - nummov > 0){
+					nave_mover(nave, nave->posy - nummov, nave->posx);
+					nave_cambiarposicion(nave, nave->posy - nummov, nave->posx);
 					selected = true;
 				}
 				break;
 			case 3:
-				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx - 1){
-					nave_mover(nave, nave->posy, nave->posx - 1);
+				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx - nummov) && nave->posx - nummov > 0){
+					nave_mover(nave, nave->posy, nave->posx - nummov);
+					nave_cambiarposicion(nave, nave->posy, nave->posx - nummov);
 					selected = true;
 				}
 				break;
@@ -104,6 +109,13 @@ int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
 		}
 	}
 	return 0;
+}
+
+
+int nave_cambiarposicion(tipo_nave *nave, int posy, int posx){
+		nave->posx = posx;
+		nave->posy = posy;
+
 }
 
 // Destruye una nave librando sus recursos
