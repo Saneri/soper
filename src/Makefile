@@ -7,14 +7,14 @@ LDLIBS = -lrt -lncurses
 BOLD=\e[1m
 NC=\e[0m
 
-all: simulador
+all: simulador monitor
 
 clean: 
 	rm -r -f $(TARGET)
 
 simulador:
 	mkdir -p $(TARGET)
-	$(CC) $(CFLAGS) mapa.c simulador.c -o $(TARGET)/simulador -lrt -lm
+	$(CC) $(CFLAGS) jefe.c  mapa.c simulador.c -o $(TARGET)/simulador -lrt -lm
 	
 monitor:
 	mkdir -p $(TARGET)

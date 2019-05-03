@@ -18,9 +18,11 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <mapa.h>
+#include "mapa.h"
+#include "jefe.h"
 
 // Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
+int sigue_jugando = 1;
 int recurso_shared_memory = 0; 
 int recurso_mmap = 0;
 int recurso_mqueue = 0;
@@ -46,31 +48,15 @@ void librar_recursos_proceso_simulador() {
  * @brief Manejador de la señal SIGTERM (ctrl + C)
  */
 void manejador_SIGINT(int sig) {
-	
+	sigue_jugando = 0;
 }
 
-/*
- * @brief 
- * @param i el numero identificador del jefe
- */
-void ejecutar_jefe(int i) {
-	
-	// Iniciar tuberia para escuchar a simulador (el proceso padre)
-	int fd[2];
-	int pipe_status = pipe(fd);
-	if (pipe_status < 0) {
-		perror("(pipe) No se pudo inicializar pipe del jefe");
-		exit(EXIT_FAILURE);
-	}
-	close(fd[1]); // Cierra la salida del pipe
-
-}
 
 /*
  * @brief La rutina del proceso simulador que es el padre de los jefes 
  */
 void proceso_simulador() {
-	
+
 	// Inicializar message queue
 	printf("Simulador gestionando MQ\n");
        	struct mq_attr attributes = {
@@ -82,16 +68,31 @@ void proceso_simulador() {
 	queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
 	if (queue == (mqd_t) -1) {
 		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
+		return;
 	}
+	recurso_mqueue = 1;	
 	
-	
+	// Inicializar tuberias para comunicar con jefes
+	int pipes[N_EQUIPOS][2];
+	for (int i=0; i<N_EQUIPOS ; i++) {
+		int pipe_status = pipe(pipes[i]);
+		if (pipe_status < 0) {
+			perror("(pipe) No se pudo inicializar pipe del simulador");
+			return;
+		}
+		close(pipes[i][0]);
+	}
 
+	/////////////////////
+	// Empieza a jugar //
+	/////////////////////
 	
-	
-	printf("Simulador: Nuevo TURNO\n");
-	// Rutina de turnos aqui
-	
+	while (sigue_jugando) {
 
+		printf("Simulador: Nuevo TURNO\n");
+		// Rutina de turnos aqui
+	
+	}
 
 
 	
@@ -163,14 +164,19 @@ int init() {
 
 
 int main() {
+	// Inicializar juego
 	if (init() < 0) {
-		librar_recursos_proceso_simulador();
-		return -1;
+		perror("Simulador ha producido un error inesperado\n");
 	}
-
+	
+	// Finalmente librar todos los recursos
 	librar_recursos_proceso_simulador();
 	
-	shm_unlink(SHM_MAP_NAME);
-	mq_unlink(MQ_NAME);
+	if (recurso_shared_memory) {
+		shm_unlink(SHM_MAP_NAME);
+	}
+	if (recurso_mqueue) {
+		mq_unlink(MQ_NAME);
+	}
 	return 0;
 }
