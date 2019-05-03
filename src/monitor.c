@@ -31,14 +31,26 @@ void mapa_print(tipo_mapa *mapa)
 	screen_refresh();
 }
 
+tipo_mapa* open_map() {
+	tipo_mapa *mapa;
+	int fd_shm = shm_open(SHM_MAP_NAME, O_RDONLY, S_IRUSR | S_IWUSR);
+	if (fd_shm < 0) {
+		perror("(shm_open) No se pudo abrir la memoria compartida");
+		exit(EXIT_FAILURE);
+	}
+	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
+	return mapa;
+}
 
 int main() {
-
-
+	// Inicializacion
+	tipo_mapa* mapa = open_map();
 	screen_init();
+	
+	// La rutina de mostrar mapa
+	mapa_print(mapa);
 
-
-
+	// Finalizacion
 	screen_end();
 
 

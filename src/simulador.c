@@ -91,12 +91,34 @@ void proceso_simulador() {
 
 		printf("Simulador: Nuevo TURNO\n");
 		// Rutina de turnos aqui
-	
+		sleep(1);	
 	}
 
 
 	
 }
+
+
+/*
+ * @brief
+ */
+void init_mapa() {
+	printf("Inicializando el mapa\n");
+	for (int i=0; i<MAPA_MAXY; i++) {
+		for (int j=0; j<MAPA_MAXX; j++) {
+			tipo_casilla new_casilla;
+			new_casilla.simbolo = '.';
+			new_casilla.equipo = -1;
+			new_casilla.numNave = -1;
+			mapa->casillas[i][j] = new_casilla;
+		}	
+	}
+	
+	for (int i=0; i<N_EQUIPOS; i++) {
+		//mapa_set_num_naves(mapa, i, N_NAVES);
+	}
+}
+
 
  /*
  * @brief Inicializar la simulación
@@ -124,6 +146,9 @@ int init() {
 		return -1;
 	}
 	recurso_mmap = 1;
+
+	// Inicializar mapa
+	init_mapa();
 	
 	// Inicializar el manejador para SIGINT
 	printf("Simulador gestionando senales\n");
@@ -131,6 +156,8 @@ int init() {
 	int error = sigaction(SIGINT, &act, NULL);
 	if (error < 0) {
 		perror("No se pudo agregar el manejador a SIGINT");
+#define MQ_NAME "/mq_simulador"
+
 		return -1;
 	}
 
