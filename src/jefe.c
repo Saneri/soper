@@ -13,6 +13,17 @@
 void ejecutar_jefe(int num_jefe) {
 	pid_t pid;
 
+	// Inicializar tuberias para comunicar con las naves
+	int pipes[N_NAVES][2];
+	for (int i=0; i<N_NAVES ; i++) {
+		int pipe_status = pipe(pipes[i]);
+		if (pipe_status < 0) {
+			perror("(pipe) No se pudo inicializar pipe de la nave");
+			return;
+		}
+		close(pipes[i][0]);
+	}
+
 	for (int i=0; i<N_NAVES ; i++) {
 		pid = fork();
 		if (pid < 0) {
