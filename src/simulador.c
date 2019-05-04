@@ -137,6 +137,12 @@ int init() {
 		return -1;
 	}
 	recurso_shared_memory = 1;
+	
+	// Resize shared memory
+	if (ftruncate(fd_shm, sizeof(mapa)) == -1) {
+		perror("(ftruncate) failed");
+		return -1;
+	}
 
 	// Map la memoria compartida para el uso de este proceso
 	printf("Simulador inicializando mapa\n");  
@@ -146,7 +152,8 @@ int init() {
 		return -1;
 	}
 	recurso_mmap = 1;
-
+	
+	
 	// Inicializar mapa
 	init_mapa();
 	
