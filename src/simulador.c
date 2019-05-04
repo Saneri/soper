@@ -17,6 +17,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #include "mapa.h"
 #include "jefe.h"
@@ -26,8 +27,10 @@ int sigue_jugando = 1;
 int recurso_shared_memory = 0; 
 int recurso_mmap = 0;
 int recurso_mqueue = 0;
+int recurso_sem_monitor = 0;
 tipo_mapa* mapa;
 mqd_t queue;
+sem_t *sem_monitor = NULL;
 
 
 
@@ -41,6 +44,10 @@ void librar_recursos_proceso_simulador() {
 	}
 	if (recurso_mqueue) {
 		mq_close(queue);
+	}
+	if (recurso_sem_monitor) {
+		sem_close(sem_monitor);
+		sem_unlink(SEM_SYNC_MONITOR);
 	}
 }
 
@@ -83,6 +90,8 @@ void proceso_simulador() {
 		close(pipes[i][0]);
 	}
 
+	sem_post(sem_monitor);
+
 	/////////////////////
 	// Empieza a jugar //
 	/////////////////////
@@ -115,7 +124,7 @@ void init_mapa() {
 	}
 	
 	for (int i=0; i<N_EQUIPOS; i++) {
-		//mapa_set_num_naves(mapa, i, N_NAVES);
+		mapa_set_num_naves(mapa, i, N_NAVES);
 	}
 }
 
@@ -139,8 +148,8 @@ int init() {
 	recurso_shared_memory = 1;
 	
 	// Resize shared memory
-	if (ftruncate(fd_shm, sizeof(mapa)) == -1) {
-		perror("(ftruncate) failed");
+	if (ftruncate(fd_shm, sizeof(tipo_mapa)) == -1) {
+		perror("(ftruncate) simulador failed to resize memory");
 		return -1;
 	}
 
@@ -148,7 +157,7 @@ int init() {
 	printf("Simulador inicializando mapa\n");  
 	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
 	if (mapa == MAP_FAILED) {
-		perror("(mmap) No se pudo mapear la memoria compartid de mapa");
+		perror("(mmap) No se pudo mapear la memoria compartida de mapa");
 		return -1;
 	}
 	recurso_mmap = 1;
@@ -160,15 +169,21 @@ int init() {
 	// Inicializar el manejador para SIGINT
 	printf("Simulador gestionando senales\n");
 	act.sa_handler = manejador_SIGINT;
+	sigemptyset(&(act.sa_mask));
+	act.sa_flags = 0;
 	int error = sigaction(SIGINT, &act, NULL);
 	if (error < 0) {
-		perror("No se pudo agregar el manejador a SIGINT");
-#define MQ_NAME "/mq_simulador"
-
+		perror("No se pudo agregar el manejador SIGINT");
 		return -1;
 	}
-
 	
+	// Inicializar semaforo
+	printf("Simulador gestionando semaforos\n");
+	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR, S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+	recurso_sem_monitor = 1;
 	
 	// Crear procesos jefes
 	pid_t pid;

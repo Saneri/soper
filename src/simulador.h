@@ -51,6 +51,7 @@ typedef struct {
 
 #define SHM_MAP_NAME "/shm_naves"
 #define MQ_NAME "/mq_simulador"
+#define SEM_SYNC_MONITOR "/sync_monitor"
 
 // Rutina para librar todas las recursos que ha utilizado proceso simulador
 void librar_recursos_proceso_simulador();
