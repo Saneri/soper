@@ -10,11 +10,17 @@
 #include <math.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #include <simulador.h>
 #include <gamescreen.h>
 #include <mapa.h>
 
+int running = 1;
+int recurso_mmap = 0;
+int recurso_sem = 1;
+sem_t *sem = NULL;
+tipo_mapa *mapa;
 
 void mapa_print(tipo_mapa *mapa)
 {
@@ -32,15 +38,76 @@ void mapa_print(tipo_mapa *mapa)
 }
 
 
-int main() {
+/*
+ *@brief Para el bucle principal si el usador envia SIGINT (ctrl + C)
+ */
+void manejador_SIGINT_monitor(int sig) {
+	running = 0;
+}
 
+/*
+ *@brief inicializar monitor y ejecutar la rutina de mostrar el juego
+ */
+int init_monitor() {
+	struct sigaction act;
+	act.sa_handler = manejador_SIGINT_monitor;
+	sigemptyset(&(act.sa_mask));
+	act.sa_flags = 0;
+	int error = sigaction(SIGINT, &act, NULL);
+	if (error < 0) {
+		perror("No se pudo agregar el manejador SIGINT");
+		return -1;
+	}
 
+	if ((sem = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+	
+	sem_wait(sem);   // Espera a que simulador inicialize
+	
+	int fd_shm = shm_open(SHM_MAP_NAME, O_RDWR, S_IRUSR | S_IWUSR);
+	if (fd_shm < 0) {
+		perror("(shm_open) No se pudo abrir la memoria compartida");
+		exit(EXIT_FAILURE);
+	}
+	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
+	if (mapa == MAP_FAILED) {
+		perror("(mmap) No se pudo mapear la memoria compartida de mapa");
+		return -1;
+	}
+	recurso_mmap = 1;
+
+	if (ftruncate(fd_shm, sizeof(tipo_mapa)) == -1) {
+		perror("(ftruncate) monitor failed to resize memory");
+		munmap(mapa, sizeof(tipo_mapa));
+		exit(EXIT_FAILURE);
+	}
+	
+	
 	screen_init();
-
-
+	
+	// La rutina de mostrar mapa
+	while (running) {
+		mapa_print(mapa);
+		usleep(SCREEN_REFRESH);
+	}
 
 	screen_end();
+	return 0;
+}
 
-
-	exit(EXIT_SUCCESS);
+int main() {
+	
+	if (init_monitor() < 0) {
+		perror("Monitor ha producido un error inesperado\n");
+	}
+	
+	if (recurso_mmap) {
+		munmap(mapa, sizeof(tipo_mapa));
+	}
+	if (recurso_sem) {
+		sem_close(sem);
+		sem_unlink(SEM_SYNC_MONITOR);
+	}
 }
