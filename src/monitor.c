@@ -18,7 +18,7 @@
 
 int running = 1;
 int recurso_mmap = 0;
-int recurso_sem = 0;
+int recurso_sem = 1;
 sem_t *sem = NULL;
 tipo_mapa *mapa;
 
@@ -46,7 +46,7 @@ void manejador_SIGINT_monitor(int sig) {
 }
 
 /*
- *@brief
+ *@brief inicializar monitor y ejecutar la rutina de mostrar el juego
  */
 int init_monitor() {
 	struct sigaction act;
@@ -59,22 +59,12 @@ int init_monitor() {
 		return -1;
 	}
 
-	recurso_sem = 1;	
-	if ((sem = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR, S_IWUSR, 0)) == SEM_FAILED) {
+	if ((sem = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;
 	}
 	
-	int* i = malloc(sizeof(int));
-	sem_getvalue(sem, i);
-	printf("%d\n", *i);
-
 	sem_wait(sem);   // Espera a que simulador inicialize
-	sleep(1);
-	printf("%d\n", *i);
-	
-	//sem_wait(sem);
-	//sem_wait(sem);
 	
 	int fd_shm = shm_open(SHM_MAP_NAME, O_RDWR, S_IRUSR | S_IWUSR);
 	if (fd_shm < 0) {
@@ -100,7 +90,7 @@ int init_monitor() {
 	// La rutina de mostrar mapa
 	while (running) {
 		mapa_print(mapa);
-		sleep(5);
+		usleep(SCREEN_REFRESH);
 	}
 
 	screen_end();

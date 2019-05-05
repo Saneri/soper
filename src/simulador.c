@@ -179,7 +179,7 @@ int init() {
 	
 	// Inicializar semaforo
 	printf("Simulador gestionando semaforos\n");
-	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR, S_IWUSR, 0)) == SEM_FAILED) {
+	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;
 	}
