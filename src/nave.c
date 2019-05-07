@@ -16,20 +16,13 @@
 #include "mapa.h"
 
 /*
- * @brief Funcion para crear los recursos de la nave
+ * @brief Funcion para ejecutar tipo_nave
  * @param num_jefe el numero identificador del jefe de la nave y del equipo
  * @param num_nave el numero identificador del numero de la nave dentro del equipo
  */
-tipo_nave crear_nave(int num_jefe,int num_nave){
-	tipo_nave new_nave;
-	new_nave.vida = VIDA_MAX; 
-	new_nave.posx = 0; 
-	new_nave.posy = 0; 
-	new_nave.equipo = num_jefe; 
-	new_nave.numNave = num_nave;
-	new_nave.viva = true; 
-	return new_nave;
+int ejecutar_nave(int num_jefe,int num_nave){
 
+	return -1;
 }
 
 /*

@@ -152,12 +152,18 @@ void init_mapa() {
 			}  else if (n_equipo < 0){
 				//ERROR
 			} else {
-				tipo_nave new_nave =  crear_nave(n_equipo,mapa_get_num_naves(mapa, n_equipo));
 
+				tipo_nave new_nave;
+				new_nave.vida = VIDA_MAX; 
+				new_nave.posx = 0; 
+				new_nave.posy = 0; 
+				new_nave.equipo = n_equipo; 
+				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo);
+				new_nave.viva = true; 
 				mapa_set_nave(mapa, new_nave);
 
 				tipo_casilla new_casilla;
-				new_casilla.simbolo = n_equipo;
+				new_casilla.simbolo = n_equipo + '0';
 				new_casilla.equipo = n_equipo;
 				new_casilla.numNave = mapa_get_num_naves(mapa, n_equipo);
 				mapa->casillas[i][j] = new_casilla;
