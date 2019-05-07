@@ -21,6 +21,7 @@
 
 #include "mapa.h"
 #include "jefe.h"
+#include "nave.h"
 
 const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0}, 
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
@@ -150,7 +151,7 @@ void init_mapa() {
 				mapa->casillas[i][j] = new_casilla;
 			}  else if (n_equipo < 0){
 				//ERROR
-			} else {
+			} else {
 				tipo_nave new_nave =  crear_nave(n_equipo,mapa_get_num_naves(mapa, n_equipo));
 
 				mapa_set_nave(mapa, new_nave);

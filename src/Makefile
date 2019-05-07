@@ -14,7 +14,7 @@ clean:
 
 simulador:
 	mkdir -p $(TARGET)
-	$(CC) $(CFLAGS) jefe.c  mapa.c simulador.c -o $(TARGET)/simulador -lrt -lm
+	$(CC) $(CFLAGS) jefe.c nave.c mapa.c simulador.c -o $(TARGET)/simulador -lrt -lm
 	
 monitor:
 	mkdir -p $(TARGET)
