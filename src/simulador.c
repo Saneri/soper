@@ -113,19 +113,42 @@ void proceso_simulador() {
  */
 void init_mapa() {
 	printf("Inicializando el mapa\n");
+
+	for (int i=0; i<N_EQUIPOS; i++) {
+		mapa_set_num_naves(mapa, i, 0);
+	}
+
 	for (int i=0; i<MAPA_MAXY; i++) {
 		for (int j=0; j<MAPA_MAXX; j++) {
-			tipo_casilla new_casilla;
-			new_casilla.simbolo = '.';
-			new_casilla.equipo = -1;
-			new_casilla.numNave = -1;
-			mapa->casillas[i][j] = new_casilla;
+			int n_equipo = INICIO_NAVES[i][j];
+			if(n_equipo == 0){
+				tipo_casilla new_casilla;
+				new_casilla.simbolo = '.';
+				new_casilla.equipo = -1;
+				new_casilla.numNave = -1;
+				mapa->casillas[i][j] = new_casilla;
+			}  else if (n_equipo < 0){
+				//ERROR
+			} else {
+				tipo_nave new_nave =  crear_nave(n_equipo,mapa_get_num_naves(mapa, n_equipo));
+
+				mapa_set_nave(mapa, new_nave);
+
+				tipo_casilla new_casilla;
+				new_casilla.simbolo = n_equipo;
+				new_casilla.equipo = n_equipo;
+				new_casilla.numNave = mapa_get_num_naves(mapa, n_equipo);
+				mapa->casillas[i][j] = new_casilla;
+
+				mapa_set_num_naves(mapa, n_equipo, mapa_get_num_naves(mapa, n_equipo) + 1);
+
+			}
+
+			
 		}	
 	}
 	
-	for (int i=0; i<N_EQUIPOS; i++) {
-		mapa_set_num_naves(mapa, i, N_NAVES);
-	}
+	
 }
 
 
