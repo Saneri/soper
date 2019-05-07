@@ -31,7 +31,6 @@ void ejecutar_jefe(int num_jefe) {
 			}
 			close(pipes[i][0]);
 
-			//crear_nave(num_jefe, i);
 			exit(EXIT_SUCCESS);
 		} else {
 			
@@ -47,7 +46,6 @@ void ejecutar_jefe(int num_jefe) {
 	}
 	close(fd[1]); // Cierra la salida del pipe
 
-	printf("JEFE LISTO");
 	exit(EXIT_SUCCESS);
 }
 
