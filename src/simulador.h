@@ -53,6 +53,9 @@ typedef struct {
 #define MQ_NAME "/mq_simulador"
 #define SEM_SYNC_MONITOR "/sync_monitor"
 
+// La mapa antes de inicializar el juego
+const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX];
+
 // Rutina para librar todas las recursos que ha utilizado proceso simulador
 void librar_recursos_proceso_simulador();
 
