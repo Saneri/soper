@@ -14,6 +14,11 @@
 #include <nave.h>
 #include <mapa.h>
 
+/*
+ * @brief Funcion para crear los recursos de la nave
+ * @param num_jefe el numero identificador del jefe de la nave y del equipo
+ * @param num_nave el numero identificador del numero de la nave dentro del equipo
+ */
 tipo_nave crear_nave(int num_jefe,int num_nave){
 	tipo_nave new_nave;
 	new_nave-> vida = VIDA_MAX; 
@@ -25,7 +30,12 @@ tipo_nave crear_nave(int num_jefe,int num_nave){
 	return new_nave;
 
 }
-// Intenta a atacar a una posicion con la nave elegido
+
+/*
+ * @brief Funcion para intentar atacar a una posicion con la nave elegida
+ * @param mapa estructura con la informacion necesaria de el mapa
+ * @param nave estructura con la informacion de la nave que va a realizar el ataque
+ */
 int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 	int origenx = nave->posx;
 	int origeny = nave->posy;
@@ -54,21 +64,24 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 	return -1; // no implementado
 }
 
-// Mover nave aleatoriamente a las casilla adyacentes
-// Direcciones 
-//	0 ---- N
-//	1 ---- E
-//	2 ---- S
-//	3 ---- W
+/*
+ * @brief Funcion para realizar un movimiento de una nave y modifica el mapa
+ * @param mapa estructura con la informacion necesaria de el mapa
+ * @param nave estructura con la informacion de la nave que va a realizar el movimiento
+ * @param targety la coordenada de la posicion en y a moverse
+ * @param targetx la coordenada de la posicion en x a moverse
+ */
 int nave_mover(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx){
 	mapa_clean_casilla(mapa, nave->posy, nave->posx);
 	mapa_set_nave(mapa, tipo_nave nave);
 }
 
-/*
-*
-*/
 
+/*
+ * @brief Funcion para realizar un movimiento aleatorio de direccion y cantidad por el mapa
+ * @param mapa estructura con la informacion necesaria de el mapa
+ * @param nave estructura con la informacion de la nave que va a realizar el movimiento
+ */
 int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
 	int direccion = rand() % 4;
 	int nummov = rand() % MOVER_ALCANCE;
@@ -111,15 +124,24 @@ int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
 	return 0;
 }
 
-
+/*
+ * @brief Fumcion auxiliar para cambiar los datos de posicion de la nave
+ * @param nave estructura con la informacion de la nave que va a cambiar su posicion
+ * @param posy la coordenada de la posicion en y a cambiar
+ * @param posx la coordenada de la posicion en x a cambiar
+ */
 int nave_cambiarposicion(tipo_nave *nave, int posy, int posx){
 		nave->posx = posx;
 		nave->posy = posy;
 
 }
 
-// Destruye una nave librando sus recursos
-int nave_destruir(tipo_mapa *mapa, tipo_nave *nave) {
+/*
+ * @brief Funcion para destruir una nave con sus correspondientes recursos
+ * @param mapa estructura con la informacion de el mapa 
+ * @param nave estructura con la informacion de la nave que va a realizar el movimiento
+ */
+ int nave_destruir(tipo_mapa *mapa, tipo_nave *nave) {
 	nave->vida = 0;
 	nave->viva = false;
 	mapa_clean_casilla(mapa, nave->posy, nave->posx);
