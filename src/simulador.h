@@ -65,6 +65,9 @@ void manejador_SIGINT(int sig);
 // La rutina del proceso simulador
 void proceso_simulador();
 
+// Inicializar las posiciones de la mapa
+void init_mapa();
+
 // Inicializar la simulación
 int init();
 
