@@ -19,9 +19,10 @@
 #include <unistd.h>
 #include <semaphore.h>
 
+#include "nave.h"
+#include "simulador.h"
 #include "mapa.h"
 #include "jefe.h"
-#include "nave.h"
 
 const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0}, 
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
@@ -122,6 +123,8 @@ void proceso_simulador() {
 
 		printf("Simulador: Nuevo TURNO\n");
 		// Rutina de turnos aqui
+		tipo_nave nave = mapa_get_nave(mapa, 1, 1);
+		nave_mover_aleatorio(mapa, &nave);
 		sleep(1);	
 	}
 

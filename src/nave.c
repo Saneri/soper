@@ -78,34 +78,36 @@ int nave_mover(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx){
  * @param nave estructura con la informacion de la nave que va a realizar el movimiento
  */
 int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
-	int direccion = rand() % 4;
-	int nummov = rand() % MOVER_ALCANCE;
 	bool selected = false;
 	while(!selected) {
+		int direccion = rand() % 4;
+		int nummov = rand() % MOVER_ALCANCE + 1;
+		printf("Dir: %d\n", direccion);
+		printf("N_mov: %d\n", nummov);
 		switch(direccion) {
 			case 0:
-				if (mapa_is_casilla_vacia(mapa, nave->posy + nummov, nave->posx) && nave->posy + nummov < MAPA_MAXY){
+				if (mapa_is_casilla_vacia(mapa, nave->posy + nummov, nave->posx) && (nave->posy + nummov < MAPA_MAXY)){
 					nave_mover(mapa, nave, nave->posy + nummov, nave->posx);
 					nave_cambiarposicion(nave,nave->posy + nummov, nave->posx);
 					selected = true;
 				}
 				break;
 			case 1:
-				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx + nummov) && nave->posx + nummov < MAPA_MAXX){
+				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx + nummov) && (nave->posx + nummov < MAPA_MAXX)){
 					nave_mover(mapa, nave, nave->posy, nave->posx + nummov);
 					nave_cambiarposicion(nave, nave->posy, nave->posx + nummov);
 					selected = true;
 				}
 				break;
 			case 2:
-				if (mapa_is_casilla_vacia(mapa, nave->posy - nummov, nave->posx) && nave->posy - nummov > 0){
+				if (mapa_is_casilla_vacia(mapa, nave->posy - nummov, nave->posx) && (nave->posy - nummov > 0)){
 					nave_mover(mapa, nave, nave->posy - nummov, nave->posx);
 					nave_cambiarposicion(nave, nave->posy - nummov, nave->posx);
 					selected = true;
 				}
 				break;
 			case 3:
-				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx - nummov) && nave->posx - nummov > 0){
+				if (mapa_is_casilla_vacia(mapa, nave->posy, nave->posx - nummov) && (nave->posx - nummov > 0)){
 					nave_mover(mapa, nave, nave->posy, nave->posx - nummov);
 					nave_cambiarposicion(nave, nave->posy, nave->posx - nummov);
 					selected = true;

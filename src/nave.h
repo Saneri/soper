@@ -1,6 +1,8 @@
 #ifndef SRC_NAVE_H_
 #define SRC_NAVE_H_
 
+#include "simulador.h"
+
 // Constructor de tipo_nave
 tipo_nave crear_nave(int num_jefe, int num_nave);
 
