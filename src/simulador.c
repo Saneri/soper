@@ -55,7 +55,7 @@ int recurso_sem_monitor = 0;
 tipo_mapa* mapa;
 mqd_t queue;
 sem_t *sem_monitor = NULL;
-
+int pipes[N_EQUIPOS][2];
 
 
 /*
@@ -103,16 +103,9 @@ int proceso_simulador() {
 	}
 	recurso_mqueue = 1;	
 	
-	// Inicializar tuberias para comunicar con jefes
-	int pipes[N_EQUIPOS][2];
-	for (int i=0; i<N_EQUIPOS ; i++) {
-		int pipe_status = pipe(pipes[i]);
-		if (pipe_status < 0) {
-			perror("(pipe) No se pudo inicializar pipe del simulador");
-			return -1;
-		}
+	for (int i=0; i<N_EQUIPOS; i++) {
 		close(pipes[i][0]);
-	}
+	}	
 
 	sem_post(sem_monitor);
 
@@ -124,19 +117,29 @@ int proceso_simulador() {
 	int num_naves_total = 0;
 	while (sigue_jugando) {
 		printf("Simulador: Nuevo TURNO\n");
+		strcpy(msg_sim.msg, "TURNO");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
-			strcpy(msg_sim.msg, "TURNO");
-
+			
 			write(pipes[i][1], (char*)& msg_sim, sizeof(msg_simulador));  
 			num_naves_total += mapa_get_num_naves(mapa, i);
 		}
 		
 		printf("Simulador: eschuchando cola mensajes\n");
+		for (int i=0; i<num_naves_total; i++) {
+			// Wait until every nave has written to mqueue
+		}
+
 		sleep(1);
 		// Finalizar el turno 
 		mapa_restore(mapa);
 		check_winner();	
+	}
+	
+	// Finalizar jefes
+	strcpy(msg_sim.msg, "FIN");
+	for (int i=0; i<N_EQUIPOS; i++) {
+		write(pipes[i][1], (char*)& msg_sim, sizeof(msg_simulador));
 	}
 
 	return 0;
@@ -264,6 +267,15 @@ int init() {
 		return -1;
 	}
 	recurso_sem_monitor = 1;
+	
+	// Inicializar tuberias para comunicar con jefes
+	for (int i=0; i<N_EQUIPOS ; i++) {
+		int pipe_status = pipe(pipes[i]);
+		if (pipe_status < 0) {
+			perror("(pipe) No se pudo inicializar pipe del simulador");
+			return -1;
+		}
+	}
 
 	// Crear procesos jefes
 	pid_t pid;
@@ -272,11 +284,10 @@ int init() {
 		if (pid < 0) {
 			perror("(fork) No se pudo crear nuevo proceso");
 			return -1;
-		} else if (pid == 0) {
-			// Jefe (proceso hijo)
-			ejecutar_jefe(i);
-		} else {
-			// Simulador (proceso padre)
+		} else if (pid == 0) {	// Jefe (proceso hijo)
+			ejecutar_jefe(i, pipes[i]);
+
+		} else {		// Simulador (proceso padre)
 			
 		}
 	}
