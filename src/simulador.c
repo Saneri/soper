@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <mqueue.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,7 +86,7 @@ void manejador_SIGINT(int sig) {
 /*
  * @brief La rutina del proceso simulador que es el padre de los jefes 
  */
-void proceso_simulador() {
+int proceso_simulador() {
 
 	// Inicializar message queue
 	printf("Simulador gestionando MQ\n");
@@ -98,7 +99,7 @@ void proceso_simulador() {
 	queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
 	if (queue == (mqd_t) -1) {
 		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
-		return;
+		return -1;
 	}
 	recurso_mqueue = 1;	
 	
@@ -108,7 +109,7 @@ void proceso_simulador() {
 		int pipe_status = pipe(pipes[i]);
 		if (pipe_status < 0) {
 			perror("(pipe) No se pudo inicializar pipe del simulador");
-			return;
+			return -1;
 		}
 		close(pipes[i][0]);
 	}
@@ -119,22 +120,26 @@ void proceso_simulador() {
 	// Empieza a jugar //
 	/////////////////////
 	
-	char *str_turno = "TURNO";
+	msg_simulador msg_sim;	
 	int num_naves_total = 0;
 	while (sigue_jugando) {
 		printf("Simulador: Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
-		for (int i=0; i<N_EQUIPOS ; i++) {
-			write(pipes[i][1], str_turno, strlen(str_turno));  
+		for (int i=0; i<N_EQUIPOS; i++) {
+			strcpy(msg_sim.msg, "TURNO");
+
+			write(pipes[i][1], (char*)& msg_sim, sizeof(msg_simulador));  
 			num_naves_total += mapa_get_num_naves(mapa, i);
 		}
 		
-		printf("Simulador: eschuchando cola mensajes");
+		printf("Simulador: eschuchando cola mensajes\n");
 		sleep(1);
 		// Finalizar el turno 
 		mapa_restore(mapa);
 		check_winner();	
 	}
+
+	return 0;
 }
 
 /*
@@ -259,7 +264,7 @@ int init() {
 		return -1;
 	}
 	recurso_sem_monitor = 1;
-	
+
 	// Crear procesos jefes
 	pid_t pid;
 	for (int i=0; i<N_EQUIPOS; i++) {
@@ -275,7 +280,11 @@ int init() {
 			
 		}
 	}
-	proceso_simulador();
+	int sim_error = proceso_simulador();
+	if (sim_error < 0) {
+		perror("Proceso simulador no ha ejecutado correctamente");
+		return -1;
+	}
 
 	// Espera a todos los jefes
 	for (int i=0; i<N_EQUIPOS; i++) {

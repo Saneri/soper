@@ -21,8 +21,10 @@ void ejecutar_jefe(int num_jefe) {
 			perror("(fork) No se pudo inicializar proceso nave");
 			exit(EXIT_FAILURE);
 		} else if (pid == 0) {
-			printf("CREANDO NAVE\n");
-
+			printf("CREANDO NAVE %d %d\n", num_jefe, i);
+			//ejecutar_nave(num_jefe, i);	
+			exit(EXIT_SUCCESS);
+		} else {
 			// Inicializar tuberias para comunicar con las naves
 			int pipe_status = pipe(pipes[i]);
 			if (pipe_status < 0) {
@@ -31,9 +33,6 @@ void ejecutar_jefe(int num_jefe) {
 			}
 			close(pipes[i][0]);
 
-			exit(EXIT_SUCCESS);
-		} else {
-			
 		}
 	}
 

@@ -49,6 +49,10 @@ typedef struct {
 	int num_naves[N_EQUIPOS]; // Número de naves vivas en un equipo
 } tipo_mapa;
 
+typedef struct {
+	char msg[80];
+} msg_simulador;
+
 #define SHM_MAP_NAME "/shm_naves"
 #define MQ_NAME "/mq_simulador"
 #define SEM_SYNC_MONITOR "/sync_monitor"
@@ -63,7 +67,7 @@ void librar_recursos_proceso_simulador();
 void manejador_SIGINT(int sig);
 
 // La rutina del proceso simulador
-void proceso_simulador();
+int proceso_simulador();
 
 // Comprobar si alguien ha ganado
 void check_winner();
