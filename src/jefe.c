@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "simulador.h"
 #include "nave.h"
@@ -44,7 +45,22 @@ void ejecutar_jefe(int num_jefe) {
 		exit(EXIT_FAILURE);
 	}
 	close(fd[1]); // Cierra la salida del pipe
+	
+	msg_simulador msg_sim;
 
-	exit(EXIT_SUCCESS);
+	// La rutina del jefe
+	while (1) {
+		printf("Sim Jefe %d: leyendo siguente mensaje del PIPE", num_jefe);
+		read(fd[0], (char*) &msg_sim, sizeof(msg_simulador));
+		if (strcmp(msg_sim.msg, "TURNO") == 0) {
+			// Enviar MOVER_ALEATORIO y ATACAR
+		} else if (strcmp(msg_sim.msg, "FIN") == 0) {
+			// Enviar FIN y acabar este proceso
+			
+			exit(EXIT_SUCCESS);
+		}
+
+	}
+	exit(EXIT_FAILURE); // No deberia que llegar hasta aqui
 }
 
