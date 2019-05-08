@@ -2,7 +2,7 @@
  * @file simulador.c
  * @author Santeri Suitiala & Roberto Pirck Valdés, grupo 5, practicas 2212
  * @date
- * @brief 
+ * @brief
  */
 
 #include <fcntl.h>
@@ -24,30 +24,30 @@
 #include "mapa.h"
 #include "jefe.h"
 
-const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3}, 
-						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3}, 
-						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
+const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
+						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
+						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
 // Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
 int sigue_jugando = 1;
-int recurso_shared_memory = 0; 
+int recurso_shared_memory = 0;
 int recurso_mmap = 0;
 int recurso_mqueue = 0;
 int recurso_sem_monitor = 0;
@@ -60,7 +60,7 @@ sem_t *sem_monitor = NULL;
 /*
  * @brief rutina para librar todas las recursos que ha utilizado proceso simulador
  */
-void librar_recursos_proceso_simulador() {	
+void librar_recursos_proceso_simulador() {
 	printf("Librando recursos\n");
 	if (recurso_mmap) {
 		munmap(mapa, sizeof(*mapa));
@@ -83,7 +83,7 @@ void manejador_SIGINT(int sig) {
 
 
 /*
- * @brief La rutina del proceso simulador que es el padre de los jefes 
+ * @brief La rutina del proceso simulador que es el padre de los jefes
  */
 void proceso_simulador() {
 
@@ -93,15 +93,15 @@ void proceso_simulador() {
 		.mq_flags = 0,
 		.mq_maxmsg = 10,
 		.mq_curmsgs = 0,
-		.mq_msgsize = sizeof(char) * 80 
-	};	
+		.mq_msgsize = sizeof(char) * 80
+	};
 	queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
 	if (queue == (mqd_t) -1) {
 		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
 		return;
 	}
-	recurso_mqueue = 1;	
-	
+	recurso_mqueue = 1;
+
 	// Inicializar tuberias para comunicar con jefes
 	int pipes[N_EQUIPOS][2];
 	for (int i=0; i<N_EQUIPOS ; i++) {
@@ -118,18 +118,19 @@ void proceso_simulador() {
 	/////////////////////
 	// Empieza a jugar //
 	/////////////////////
-	
+
 	while (sigue_jugando) {
 
 		printf("Simulador: Nuevo TURNO\n");
 		// Rutina de turnos aqui
 		tipo_nave nave = mapa_get_nave(mapa, 1, 1);
 		nave_mover_aleatorio(mapa, &nave);
-		sleep(1);	
+		/*nave_atacar(mapa,&nave);*/
+		sleep(TURNO_SECS);
 	}
 
 
-	
+
 }
 
 
@@ -157,12 +158,12 @@ void init_mapa() {
 			} else {
 
 				tipo_nave new_nave;
-				new_nave.vida = VIDA_MAX; 
-				new_nave.posx = 0; 
-				new_nave.posy = 0; 
-				new_nave.equipo = n_equipo; 
+				new_nave.vida = VIDA_MAX;
+				new_nave.posx = 0;
+				new_nave.posy = 0;
+				new_nave.equipo = n_equipo;
 				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo);
-				new_nave.viva = true; 
+				new_nave.viva = true;
 				mapa_set_nave(mapa, new_nave);
 
 				tipo_casilla new_casilla;
@@ -175,11 +176,11 @@ void init_mapa() {
 
 			}
 
-			
-		}	
+
+		}
 	}
-	
-	
+
+
 }
 
 
@@ -191,7 +192,7 @@ int init() {
 
 	struct sigaction act;
 	int fd_shm;
-	
+
 	// Inicializar memoria compartida para la mapa
 	printf("Simulador gestionando SHM\n");
 	fd_shm = shm_open(SHM_MAP_NAME, O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
@@ -200,7 +201,7 @@ int init() {
 		return -1;
 	}
 	recurso_shared_memory = 1;
-	
+
 	// Resize shared memory
 	if (ftruncate(fd_shm, sizeof(tipo_mapa)) == -1) {
 		perror("(ftruncate) simulador failed to resize memory");
@@ -208,18 +209,18 @@ int init() {
 	}
 
 	// Map la memoria compartida para el uso de este proceso
-	printf("Simulador inicializando mapa\n");  
+	printf("Simulador inicializando mapa\n");
 	mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
 	if (mapa == MAP_FAILED) {
 		perror("(mmap) No se pudo mapear la memoria compartida de mapa");
 		return -1;
 	}
 	recurso_mmap = 1;
-	
-	
+
+
 	// Inicializar mapa
 	init_mapa();
-	
+
 	// Inicializar el manejador para SIGINT
 	printf("Simulador gestionando senales\n");
 	act.sa_handler = manejador_SIGINT;
@@ -230,7 +231,7 @@ int init() {
 		perror("No se pudo agregar el manejador SIGINT");
 		return -1;
 	}
-	
+
 	// Inicializar semaforo
 	printf("Simulador gestionando semaforos\n");
 	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
@@ -238,7 +239,7 @@ int init() {
 		return -1;
 	}
 	recurso_sem_monitor = 1;
-	
+
 	// Crear procesos jefes
 	pid_t pid;
 	for (int i=0; i<N_EQUIPOS; i++) {
@@ -251,7 +252,7 @@ int init() {
 			ejecutar_jefe(i);
 		} else {
 			// Simulador (proceso padre)
-			
+
 		}
 	}
 	proceso_simulador();
@@ -271,10 +272,10 @@ int main() {
 	if (init() < 0) {
 		perror("Simulador ha producido un error inesperado\n");
 	}
-	
+
 	// Finalmente librar todos los recursos
 	librar_recursos_proceso_simulador();
-	
+
 	if (recurso_shared_memory) {
 		shm_unlink(SHM_MAP_NAME);
 	}
