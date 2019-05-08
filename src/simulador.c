@@ -52,9 +52,11 @@ int recurso_shared_memory = 0;
 int recurso_mmap = 0;
 int recurso_mqueue = 0;
 int recurso_sem_monitor = 0;
+int recurso_sem_simjefe = 0;
 tipo_mapa* mapa;
 mqd_t queue;
 sem_t *sem_monitor = NULL;
+sem_t *sem_simjefe = NULL;
 int pipes[N_EQUIPOS][2];
 
 
@@ -72,6 +74,11 @@ void librar_recursos_proceso_simulador() {
 	if (recurso_sem_monitor) {
 		sem_close(sem_monitor);
 		sem_unlink(SEM_SYNC_MONITOR);
+	}
+
+	if (recurso_sem_simjefe) {
+		sem_close(sem_simjefe);
+		sem_unlink(SEM_SYNC_SIMJEFE);
 	}
 }
 
@@ -106,25 +113,22 @@ int proceso_simulador() {
 	for (int i=0; i<N_EQUIPOS; i++) {
 		close(pipes[i][0]);
 	}	
-
 	sem_post(sem_monitor);
 
 	/////////////////////
 	// Empieza a jugar //
 	/////////////////////
 	
-	msg_simulador msg_sim;	
+	char *msg_sim = "TURNO";	
 	int num_naves_total = 0;
 	while (sigue_jugando) {
-		printf("Simulador: Nuevo TURNO\n");
-		strcpy(msg_sim.msg, "TURNO");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
-			
-			write(pipes[i][1], (char*)& msg_sim, sizeof(msg_simulador));  
+			write(pipes[i][1], msg_sim, strlen(msg_sim));  
 			num_naves_total += mapa_get_num_naves(mapa, i);
 		}
-		
+		sem_post(sem_simjefe);
+
 		printf("Simulador: eschuchando cola mensajes\n");
 		for (int i=0; i<num_naves_total; i++) {
 			// Wait until every nave has written to mqueue
@@ -137,9 +141,10 @@ int proceso_simulador() {
 	}
 	
 	// Finalizar jefes
-	strcpy(msg_sim.msg, "FIN");
+	msg_sim = "FIN";
 	for (int i=0; i<N_EQUIPOS; i++) {
-		write(pipes[i][1], (char*)& msg_sim, sizeof(msg_simulador));
+		write(pipes[i][1], msg_sim, strlen(msg_sim));
+		sem_post(sem_simjefe);
 	}
 
 	return 0;
@@ -260,14 +265,20 @@ int init() {
 		return -1;
 	}
 	
-	// Inicializar semaforo
+	// Inicializar semaforos
 	printf("Simulador gestionando semaforos\n");
 	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;
 	}
 	recurso_sem_monitor = 1;
-	
+
+	if ((sem_simjefe = sem_open(SEM_SYNC_SIMJEFE, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+	recurso_sem_simjefe = 1;
+
 	// Inicializar tuberias para comunicar con jefes
 	for (int i=0; i<N_EQUIPOS ; i++) {
 		int pipe_status = pipe(pipes[i]);

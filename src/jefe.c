@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <semaphore.h>
 #include <string.h>
 
 #include "simulador.h"
@@ -36,19 +37,25 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 
 		}
 	}
+	
+	sem_t *sem_simjefe;
+	if ((sem_simjefe = sem_open(SEM_SYNC_SIMJEFE, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semafor");
+		exit(EXIT_FAILURE);
+	}
 
 	close(sim_pipe[1]);
-	msg_simulador msg_sim;
-
+	char msg_sim[80];
 	// La rutina del jefe
 	while (1) {
-		//printf("Sim Jefe %d: leyendo siguente mensaje del PIPE", num_jefe);
-		read(sim_pipe[1], (char*) &msg_sim, sizeof(msg_simulador));
-		printf("Jefe: %s\n", msg_sim.msg);
-		if (strcmp(msg_sim.msg, "TURNO") == 0) {
+		printf("Sim Jefe %d: leyendo siguente mensaje del PIPE\n", num_jefe);
+		sem_wait(sem_simjefe);	
+		read(sim_pipe[0], msg_sim, sizeof(msg_sim));
+		printf("Jefe: %s\n", msg_sim);
+		if (strcmp(msg_sim, "TURNO") == 0) {
 			// Enviar MOVER_ALEATORIO y ATACAR
 			printf("JEFE TURNO !\n");
-		} else if (strcmp(msg_sim.msg, "FIN") == 0) {
+		} else if (strcmp(msg_sim, "FIN") == 0) {
 			// Enviar FIN y acabar este proceso
 			
 			exit(EXIT_SUCCESS);
