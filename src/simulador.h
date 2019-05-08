@@ -65,8 +65,11 @@ void manejador_SIGINT(int sig);
 // La rutina del proceso simulador
 void proceso_simulador();
 
+// Comprobar si alguien ha ganado
+void check_winner();
+
 // Inicializar las posiciones de la mapa
-void init_mapa();
+int init_mapa();
 
 // Inicializar la simulación
 int init();

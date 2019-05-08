@@ -119,24 +119,51 @@ void proceso_simulador() {
 	// Empieza a jugar //
 	/////////////////////
 	
+	char *str_turno = "TURNO";
+	int num_naves_total = 0;
 	while (sigue_jugando) {
-
 		printf("Simulador: Nuevo TURNO\n");
-		// Rutina de turnos aqui
-		tipo_nave nave = mapa_get_nave(mapa, 1, 1);
-		nave_mover_aleatorio(mapa, &nave);
-		sleep(1);	
+		// Enviar mensaje TURNO a cada jefe
+		for (int i=0; i<N_EQUIPOS ; i++) {
+			write(pipes[i][1], str_turno, strlen(str_turno));  
+			num_naves_total += mapa_get_num_naves(mapa, i);
+		}
+		
+		printf("Simulador: eschuchando cola mensajes");
+		sleep(1);
+		// Finalizar el turno 
+		mapa_restore(mapa);
+		check_winner();	
 	}
+}
 
-
-	
+/*
+ * @brief Comprobar si el juego tiene ganador
+ */
+void check_winner() {
+	int n_equipos_vivos = 0;
+	int ganador = 0;
+	for (int i=0 ; i<N_EQUIPOS ; i++) {
+		if (mapa->num_naves[i] > 0) {
+		       n_equipos_vivos++;
+		       ganador = i;
+		}		
+	}
+	if (n_equipos_vivos < 2) {
+		sigue_jugando = 0;
+		if (n_equipos_vivos) {
+			printf("The winner is team number %d!\n", ganador);
+		} else {
+			perror("No hay ganador!");
+		}
+	}
 }
 
 
 /*
  * @brief
  */
-void init_mapa() {
+int init_mapa() {
 	printf("Inicializando el mapa\n");
 
 	for (int i=0; i<N_EQUIPOS; i++) {
@@ -146,23 +173,18 @@ void init_mapa() {
 	for (int i=0; i<MAPA_MAXY; i++) {
 		for (int j=0; j<MAPA_MAXX; j++) {
 			int n_equipo = INICIO_NAVES[i][j];
-			if(n_equipo == 0){
+			if (n_equipo == 0) {
 				tipo_casilla new_casilla;
 				new_casilla.simbolo = '.';
 				new_casilla.equipo = -1;
 				new_casilla.numNave = -1;
 				mapa->casillas[i][j] = new_casilla;
-			}  else if (n_equipo < 0){
-				//ERROR
+			}  else if (n_equipo < 0) {
+				perror("No se puede asignar un numero negativo para la mapa");
+				return -1;
 			} else {
 
-				tipo_nave new_nave;
-				new_nave.vida = VIDA_MAX; 
-				new_nave.posx = 0; 
-				new_nave.posy = 0; 
-				new_nave.equipo = n_equipo; 
-				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo);
-				new_nave.viva = true; 
+				tipo_nave new_nave = crear_nave(n_equipo, mapa_get_num_naves(mapa, n_equipo));
 				mapa_set_nave(mapa, new_nave);
 
 				tipo_casilla new_casilla;
@@ -172,14 +194,10 @@ void init_mapa() {
 				mapa->casillas[i][j] = new_casilla;
 
 				mapa_set_num_naves(mapa, n_equipo, mapa_get_num_naves(mapa, n_equipo) + 1);
-
 			}
-
-			
 		}	
 	}
-	
-	
+	return 0;
 }
 
 
@@ -218,7 +236,10 @@ int init() {
 	
 	
 	// Inicializar mapa
-	init_mapa();
+	if (init_mapa() < 0) {
+		perror("Hay algo mal en la inicializacion de la mapa");
+		return -1;
+	}
 	
 	// Inicializar el manejador para SIGINT
 	printf("Simulador gestionando senales\n");

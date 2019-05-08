@@ -27,7 +27,7 @@ void ejecutar_jefe(int num_jefe) {
 			int pipe_status = pipe(pipes[i]);
 			if (pipe_status < 0) {
 				perror("(pipe) No se pudo inicializar pipe de la nave");
-				return;
+				exit(EXIT_FAILURE);
 			}
 			close(pipes[i][0]);
 
