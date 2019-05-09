@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #include "simulador.h"
 #include "nave.h"
@@ -40,9 +41,36 @@ tipo_nave crear_nave (int num_jefe, int num_nave, int posx, int posy) {
  * @param pipe_jefe[2] la tuberia que se utiliza para comuniacion enter jefe y nave
  */
 int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
-	
+
+	int fd_shm = shm_open(SHM_MAP_NAME, O_RDWR, S_IRUSR | S_IWUSR);
+        if (fd_shm < 0) {
+                perror("(shm_open) No se pudo abrir la memoria compartida");
+                return -1;
+        }
+
+        tipo_mapa *mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
+        
+	if (mapa == MAP_FAILED) {
+                perror("(mmap) No se pudo mapear la memoria compartida de mapa");
+                return -1;
+        }
+
+        if (ftruncate(fd_shm, sizeof(tipo_mapa)) == -1) {
+                perror("(ftruncate) nave failed to resize memory");
+                munmap(mapa, sizeof(tipo_mapa));
+                return -1;
+        }
+
+		
+	sem_t *sem_mapa;
+	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+
 	mqd_t queue = mq_open(MQ_NAME, O_WRONLY, S_IRUSR | S_IWUSR, NULL);
 	if (queue == (mqd_t) -1) {
+		sem_close(sem_mapa);
 		perror("(mq_open) No se pudo abrir la cola de mensajes de la nave");
 		return -1;
 	}
@@ -51,6 +79,8 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 	Mensaje msg;
 	strcpy(msg.texto, "NAVE_LISTO");
 	if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
+		sem_close(sem_mapa);
+		mq_close(queue);
 		perror("(mq_send) No se pudo enviar mensaje");
 		return -1;
 	}
@@ -58,11 +88,22 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 	while (1) {
 		printf("Sim Nave %d/%d: leyendo siguiente mensaje del PIPE\n", num_jefe, num_nave);
 		read(pipe_jefe[0], msg_jefe, sizeof(msg_jefe));
-		printf("Nave: %s\n", msg_jefe);
 		if (strcmp(msg_jefe, "MOVER_ALEATORIO") == 0) {
-			printf("MOVER_ALEATORIO\n");
+			sem_wait(sem_mapa);
+			tipo_nave nave = mapa_get_nave(mapa, num_jefe, num_nave);
+			nave_mover_aleatorio(mapa, &nave);
+			sem_post(sem_mapa);
 		} else if (strcmp(msg_jefe, "ATACAR") == 0) {
-			printf("ATACAR\n");
+			sem_wait(sem_mapa);
+			tipo_nave nave = mapa_get_nave(mapa, num_jefe, num_nave);
+			nave_atacar(mapa, &nave);
+			sem_post(sem_mapa);
+			if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
+				sem_close(sem_mapa);
+				mq_close(queue);
+				perror("(mq_send) No se pudo enviar mensaje");
+				return -1;
+			}
 		} else if (strcmp(msg_jefe, "FIN") == 0) {
 			close(pipe_jefe[0]);
 			mq_close(queue);
@@ -70,14 +111,12 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 		} else {
 			perror("Nave ha sacado un mensaje invalido");
 			close(pipe_jefe[0]);
+			sem_close(sem_mapa);
 			mq_close(queue);
 			return -1;
 		}
 		memset(msg_jefe, 0, sizeof(msg_jefe));
-		if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
-			perror("(mq_send) No se pudo enviar mensaje");
-			return -1;
-		}
+	
 	}
 	return -1;
 }

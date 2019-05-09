@@ -53,10 +53,12 @@ int recurso_mmap = 0;
 int recurso_mqueue = 0;
 int recurso_sem_monitor = 0;
 int recurso_sem_simjefe = 0;
+int recurso_sem_mapa = 0;
 tipo_mapa* mapa;
 mqd_t queue;
 sem_t *sem_monitor = NULL;
 sem_t *sem_simjefe = NULL;
+sem_t *sem_mapa = NULL;
 int pipes[N_EQUIPOS][2];
 
 
@@ -74,11 +76,14 @@ void librar_recursos_proceso_simulador() {
 	if (recurso_sem_monitor) {
 		sem_close(sem_monitor);
 		sem_unlink(SEM_SYNC_MONITOR);
-	}
-
+	}	
 	if (recurso_sem_simjefe) {
 		sem_close(sem_simjefe);
 		sem_unlink(SEM_SYNC_SIMJEFE);
+	}
+	if (recurso_sem_mapa) {
+		sem_close(sem_mapa);
+		sem_unlink(SEM_MAPA);
 	}
 }
 
@@ -121,7 +126,7 @@ int proceso_simulador() {
 	/////////////////////
 
 	Mensaje msg;
-	char *msg_sim = "TURNO";	
+	char msg_sim[] = "TURNO";	
 	
 	int num_naves_total = N_EQUIPOS * N_NAVES;
 	for (int i=0; i<num_naves_total; i++) {
@@ -131,6 +136,7 @@ int proceso_simulador() {
 		}
 	}
 	while (sigue_jugando) {
+		num_naves_total = 0;
 		printf("Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
@@ -155,9 +161,9 @@ int proceso_simulador() {
 	}
 	
 	// Finalizar jefes
-	char *msg_sim_fin = "FIN";
+	char msg_sim_fin[] = "FIN";
 	for (int i=0; i<N_EQUIPOS; i++) {
-		write(pipes[i][1], msg_sim_fin, strlen(msg_sim_fin));
+		write(pipes[i][1], msg_sim_fin, sizeof(msg_sim_fin));
 		sem_post(sem_simjefe);
 		close(pipes[i][1]);
 	}
@@ -293,6 +299,12 @@ int init() {
 		return -1;
 	}
 	recurso_sem_simjefe = 1;
+	
+	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+	recurso_sem_mapa = 1;
 
 	// Inicializar tuberias para comunicar con jefes
 	for (int i=0; i<N_EQUIPOS; i++) {
