@@ -120,11 +120,12 @@ int proceso_simulador() {
 	// Empieza a jugar //
 	/////////////////////
 
+	sleep(2); // solo para probar
 	
 	int num_naves_total = 0;
 	Mensaje msg;
 	char *msg_sim = "TURNO";	
-
+	
 	while (sigue_jugando) {
 		printf("Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
