@@ -130,8 +130,8 @@ int proceso_simulador() {
 		for (int i=0; i<N_EQUIPOS; i++) {
 			write(pipes[i][1], msg_sim, strlen(msg_sim));  
 			num_naves_total += mapa_get_num_naves(mapa, i);
+			sem_post(sem_simjefe);
 		}
-		sem_post(sem_simjefe);
 
 		printf("Simulador: eschuchando cola mensajes\n");
 		for (int i=0; i<num_naves_total; i++) {
