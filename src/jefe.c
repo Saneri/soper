@@ -1,3 +1,10 @@
+/*
+ * @file jefe.c
+ * @author Santeri Suitiala & Roberto Pirck Valdés, grupo 5, practicas 2212
+ * @date 9 de Mayo 2019
+ * @brief El fichero que maneja los procesos jefes y lanzan procesos naves
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,7 +17,8 @@
 
 /*
  * @brief La rutina del proceso jefe 
- * @param i el numero identificador del jefe
+ * @param num_jefe el numero identificador del jefe
+ * @param sim_pipe[2] El tuberia que se utiliza para comunicar con el proceso simulador
  */
 void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 	pid_t pid;

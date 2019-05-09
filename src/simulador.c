@@ -1,8 +1,8 @@
 /*
  * @file simulador.c
  * @author Santeri Suitiala & Roberto Pirck Valdés, grupo 5, practicas 2212
- * @date
- * @brief
+ * @date 9 de Mayo 2019
+ * @brief El fichero principal que maneja el proceso padre del juego
  */
 
 #include <fcntl.h>
@@ -76,7 +76,8 @@ void manejador_SIGINT(int sig) {
 
 
 /*
- * @brief La rutina del proceso simulador que es el padre de los jefes
+ * @brief La rutina del proceso simulador que es el padre de los jefies
+ * @return 0 si todo ha sido bien, -1 en case de error
  */
 int proceso_simulador() {
 
@@ -126,18 +127,17 @@ int proceso_simulador() {
 		}
 
 		printf("Simulador: eschuchando cola mensajes\n");
-		for (int i=0; i<num_naves_total; i++) {
+		for (int i=0; i<num_naves_total*2; i++) {
 			// Wait until every nave has written to mqueue
 			if (mq_receive(queue, (char*) &msg, sizeof(msg), NULL) == -1) {
 				perror("(mq_receive) No se pudo recoger mensaje");
-				//return -1;
 			}
 			printf("simulador: recibido en cola de mensajes\n");
 		}
-		sleep(TURNO_SECS);
 		// Finalizar el turno
 		mapa_restore(mapa);
 		check_winner();
+		sleep(TURNO_SECS);
 	}
 
 	// Finalizar jefes
@@ -146,8 +146,6 @@ int proceso_simulador() {
 		write(pipes[i][1], msg_sim_fin, sizeof(msg_sim_fin));
 		sem_post(sem_simjefe);
 	}
-	
-	//close(pipes[i][1]);
 	return 0;
 }
 
@@ -175,7 +173,8 @@ void check_winner() {
 
 
 /*
- * @brief
+ * @brief Inicializa la mapa y llena la con casillas
+ * @return 0 si todo ha sido bien, -1 en caso de error
  */
 int init_mapa() {
 	printf("Inicializando el mapa\n");

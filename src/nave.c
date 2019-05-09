@@ -1,3 +1,10 @@
+/*
+ * @file nave.c
+ * @author Santeri Suitiala & Roberto Pirck Valdés, grupo 5, practicas 2212
+ * @date 9 de Mayo 2019
+ * @brief El fichero que maneja los procesos naves y proporcionar funciones utiles
+ */
+
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -103,11 +110,18 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 			tipo_nave nave = mapa_get_nave(mapa, num_jefe, num_nave);
 			nave_mover_aleatorio(mapa, &nave);
 			sem_post(sem_mapa);
+			strcpy(msg.texto, "MOVER_ALEATORIO");
+			if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
+				nave_librar_recursos();
+				perror("(mq_send) No se pudo enviar mensaje");
+				return -1;
+			}
 		} else if (strcmp(msg_jefe, "ATACAR") == 0) {
 			sem_wait(sem_mapa);
 			tipo_nave nave = mapa_get_nave(mapa, num_jefe, num_nave);
 			nave_atacar(mapa, &nave);
 			sem_post(sem_mapa);
+			strcpy(msg.texto, "ATACAR");
 			if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
 				nave_librar_recursos();
 				perror("(mq_send) No se pudo enviar mensaje");
@@ -127,6 +141,9 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 	return -1;
 }
 
+/*
+ * @brief La rutina para librar los recursos de la nave cuales ha utilizado
+ */
 void nave_librar_recursos() {
 	if (recurso_nave_mmap) {
 		munmap(mapa, sizeof(*mapa));
@@ -294,6 +311,7 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
  * @param nave estructura con la informacion de la nave que va a realizar el movimiento
  * @param targety la coordenada de la posicion en y a moverse
  * @param targetx la coordenada de la posicion en x a moverse
+ * @return 0 si todo ha sido bien, -1 en el caso de error
  */
 int nave_mover(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx){
 	mapa_clean_casilla(mapa, nave->posy, nave->posx);
@@ -305,6 +323,7 @@ int nave_mover(tipo_mapa *mapa, tipo_nave *nave, int targety, int targetx){
  * @brief Funcion para realizar un movimiento aleatorio de direccion y cantidad por el mapa
  * @param mapa estructura con la informacion necesaria de el mapa
  * @param nave estructura con la informacion de la nave que va a realizar el movimiento
+ * @return 0 si todo ha sido bien, -1 en el caso de error
  */
 int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
 	bool selected = false;
@@ -362,6 +381,7 @@ int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
  * @param nave estructura con la informacion de la nave que va a cambiar su posicion
  * @param posy la coordenada de la posicion en y a cambiar
  * @param posx la coordenada de la posicion en x a cambiar
+ * @return 0 si todo ha sido bien, -1 en el caso de error
  */
 int nave_cambiarposicion(tipo_mapa *mapa, tipo_nave *nave, int posy, int posx){
 	nave->posx = posx;
@@ -374,6 +394,7 @@ int nave_cambiarposicion(tipo_mapa *mapa, tipo_nave *nave, int posy, int posx){
  * @brief Funcion para destruir una nave con sus correspondientes recursos
  * @param mapa estructura con la informacion de el mapa
  * @param nave estructura con la informacion de la nave que va a realizar el movimiento
+ * @return 0 si todo ha sido bien, -1 en el caso de error
  */
  int nave_destruir(tipo_mapa *mapa, tipo_nave *nave) {
 	nave->vida = 0;

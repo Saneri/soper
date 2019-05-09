@@ -1,3 +1,10 @@
+/*
+ * @file monitor.c
+ * @author Santeri Suitiala & Roberto Pirck Valdés, grupo 5, practicas 2212
+ * @date 9 de Mayo 2019
+ * @brief El fichero que maneja la interfaz de usuario de este juego
+ */
+
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -22,6 +29,10 @@ int recurso_sem = 1;
 sem_t *sem = NULL;
 tipo_mapa *mapa;
 
+/*
+ * @brief La rutina para mostrar la interfaz de usuario 
+ * @param *mapa la mapa que se quiere mostrar
+ */
 void mapa_print(tipo_mapa *mapa)
 {
 	int i,j;
@@ -46,7 +57,8 @@ void manejador_SIGINT_monitor(int sig) {
 }
 
 /*
- *@brief inicializar monitor y ejecutar la rutina de mostrar el juego
+ * @brief inicializar monitor y ejecutar la rutina de mostrar el juegoi
+ * @return 0 si todo ha sido bien, -1 en el caso de error
  */
 int init_monitor() {
 	struct sigaction act;
