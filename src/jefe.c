@@ -60,7 +60,7 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 		if (strcmp(msg_sim, "TURNO") == 0) {
 			for (int i=0; i<N_NAVES; i++) {
 				write(pipes[i][1], msg_nave_mover, sizeof(msg_nave_mover));
-				write(pipes[i][1], msg_nave_atacar, sizeof(msg_nave_atacar));
+				//write(pipes[i][1], msg_nave_atacar, sizeof(msg_nave_atacar));
 			}
 		} else if (strcmp(msg_sim, "FIN") == 0) {
 			for (int i=0; i<N_NAVES; i++) {
