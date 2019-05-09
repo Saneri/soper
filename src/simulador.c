@@ -24,7 +24,7 @@
 #include "mapa.h"
 #include "jefe.h"
 
-const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -33,8 +33,8 @@ const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
+						{1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0},
 						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
-						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -43,7 +43,7 @@ const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+						{0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0}};
 
 // Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
 int sigue_jugando = 1;
@@ -156,7 +156,6 @@ void init_mapa() {
 			}  else if (n_equipo < 0){
 				//ERROR
 			} else {
-
 				tipo_nave new_nave;
 				new_nave.vida = VIDA_MAX;
 				new_nave.posx = j;
@@ -165,18 +164,8 @@ void init_mapa() {
 				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo - 1);
 				new_nave.viva = true;
 				mapa_set_nave(mapa, new_nave);
-
-				/*tipo_casilla new_casilla;
-				new_casilla.simbolo = n_equipo + '0';
-				new_casilla.equipo = n_equipo;
-				new_casilla.numNave = mapa_get_num_naves(mapa, n_equipo);
-				mapa->casillas[i][j] = new_casilla;*/
-
 				mapa_set_num_naves(mapa, n_equipo - 1, mapa_get_num_naves(mapa, n_equipo - 1) + 1);
-
 			}
-
-
 		}
 	}
 
@@ -264,7 +253,6 @@ int init() {
 
 	return 0;
 }
-
 
 
 int main() {

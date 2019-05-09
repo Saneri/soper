@@ -31,47 +31,116 @@ int ejecutar_nave(int num_jefe,int num_nave){
  * @param nave estructura con la informacion de la nave que va a realizar el ataque
  */
 int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
+	int direccion = rand() % 4;
 	int origenx = nave->posx;
 	int origeny = nave->posy;
 	int equipoNave = nave->equipo;
-	int i = -20;
-	while(i < 20){// coordenada x
-		if (origenx + i < MAPA_MAXX && origenx + i >= 0){
-			for(int j = -20; j < 20 ; j++){// coordenada y
-				if (origeny + j < MAPA_MAXY && origeny + j >= 0){
-					tipo_casilla casilla = mapa_get_casilla(mapa, origeny + j, origenx + i);
-					if (casilla.equipo != equipoNave && casilla.equipo != -1  ){
-						mapa_send_misil(mapa, origeny, origenx , origeny + j, origenx + i);
-						tipo_nave nave_atacada = mapa_get_nave(mapa, casilla.equipo, casilla.numNave);
-						/*printf("Numero de nave: %d\n", nave_atacada.numNave);
-						printf("Vida: %d\n", nave_atacada.vida );
-						printf("EQuipo: %d\n", nave_atacada.equipo );
-						printf("Posicion:  %d   %d\n",nave_atacada.posx, nave_atacada.posy );*/
-						if (nave_atacada.vida - ATAQUE_DANO <= 0){
-							nave_destruir(mapa, &nave_atacada);
-						} else {
-							nave_atacada.vida -= ATAQUE_DANO;
-							mapa_set_nave(mapa, nave_atacada);
-
-						}
-
-						/*for (int equipo = 0; equipo < N_EQUIPOS; ++equipo){
-							printf("Equipo : %d\n", equipo);
-							for (int n_nave = 0; n_nave < N_NAVES; ++n_nave) {
-								tipo_nave nave_mostrar = mapa->info_naves[equipo][n_nave];
-								printf("Numero de nave: %d\n", n_nave);
-								printf("Vida: %d\n", nave_mostrar.vida );
-								printf("Posicion:  %d   %d\n",nave_mostrar.posx, nave_mostrar.posy );
+	int i;
+	printf("%d\n",direccion );
+	switch (direccion){
+		case 0:
+					i = -20;
+					while(i < 20){// coordenada x
+						if (origenx + i < MAPA_MAXX && origenx + i >= 0){
+							for(int j = -20; j < 20 ; j++){// coordenada y
+								if (origeny + j < MAPA_MAXY && origeny + j >= 0){
+									tipo_casilla casilla = mapa_get_casilla(mapa, origeny + j, origenx + i);
+									if (casilla.equipo != equipoNave && casilla.equipo != -1  ){
+										mapa_send_misil(mapa, origeny, origenx , origeny + j, origenx + i);
+										tipo_nave nave_atacada = mapa_get_nave(mapa, casilla.equipo, casilla.numNave);
+										if (nave_atacada.vida - ATAQUE_DANO <= 0){
+											nave_destruir(mapa, &nave_atacada);
+										} else {
+											nave_atacada.vida -= ATAQUE_DANO;
+											mapa_set_nave(mapa, nave_atacada);
+										}
+										return 0;
+									}
+								}
 							}
-						}*/
-
-						return 0;
+						}
+						i++;
 					}
-				}
-			}
-		}
-		i++;
+					break;
+		case 1:
+					i = 20;
+					while(i > -20){// coordenada x
+						if (origenx + i < MAPA_MAXX && origenx + i >= 0){
+							for(int j = 20; j > -20 ; j--){// coordenada y
+								if (origeny + j < MAPA_MAXY && origeny + j >= 0){
+									tipo_casilla casilla = mapa_get_casilla(mapa, origeny + j, origenx + i);
+									if (casilla.equipo != equipoNave && casilla.equipo != -1  ){
+										mapa_send_misil(mapa, origeny, origenx , origeny + j, origenx + i);
+										tipo_nave nave_atacada = mapa_get_nave(mapa, casilla.equipo, casilla.numNave);
+										if (nave_atacada.vida - ATAQUE_DANO <= 0){
+											nave_destruir(mapa, &nave_atacada);
+										} else {
+											nave_atacada.vida -= ATAQUE_DANO;
+											mapa_set_nave(mapa, nave_atacada);
+										}
+										return 0;
+									}
+								}
+							}
+						}
+						i--;
+					}
+					break;
+
+		case 2:
+					i = -20;
+					while(i < 20){// coordenada y
+						if (origeny + i < MAPA_MAXY && origeny + i >= 0){
+							for(int j = 20; j > -20 ; j--){// coordenada x
+								if (origenx + j < MAPA_MAXX && origenx + j >= 0){
+									tipo_casilla casilla = mapa_get_casilla(mapa, origeny + i, origenx + j);
+									if (casilla.equipo != equipoNave && casilla.equipo != -1  ){
+										mapa_send_misil(mapa, origeny, origenx , origeny + i, origenx + j);
+										tipo_nave nave_atacada = mapa_get_nave(mapa, casilla.equipo, casilla.numNave);
+										if (nave_atacada.vida - ATAQUE_DANO <= 0){
+											nave_destruir(mapa, &nave_atacada);
+										} else {
+											nave_atacada.vida -= ATAQUE_DANO;
+											mapa_set_nave(mapa, nave_atacada);
+										}
+										return 0;
+									}
+								}
+							}
+						}
+						i++;
+					}
+					break;
+
+		case 3:
+					i = 20;
+					while(i > -20){// coordenada y
+						if (origeny + i < MAPA_MAXY && origeny + i >= 0){
+							for(int j = -20; j < 20 ; j++){// coordenada x
+								if (origenx + j < MAPA_MAXX && origenx + j >= 0){
+									tipo_casilla casilla = mapa_get_casilla(mapa, origeny + i, origenx + j);
+									if (casilla.equipo != equipoNave && casilla.equipo != -1  ){
+										mapa_send_misil(mapa, origeny, origenx , origeny + i, origenx + j);
+										tipo_nave nave_atacada = mapa_get_nave(mapa, casilla.equipo, casilla.numNave);
+										if (nave_atacada.vida - ATAQUE_DANO <= 0){
+											nave_destruir(mapa, &nave_atacada);
+										} else {
+											nave_atacada.vida -= ATAQUE_DANO;
+											mapa_set_nave(mapa, nave_atacada);
+										}
+										return 0;
+									}
+								}
+							}
+						}
+						i--;
+					}
+					break;
+
+		default:
+					break;
 	}
+
 	return -1;
 }
 
@@ -98,15 +167,10 @@ int nave_mover_aleatorio(tipo_mapa *mapa, tipo_nave *nave) {
 	bool direction_tries[4] = {false,false,false,false};
 	while(!selected) {
 		if ( direction_tries[0] == true &&  direction_tries[1] == true && direction_tries[2] == true && direction_tries[3] == true) {
-			printf("no se puede mover\n");
 			break;
 		}
 		int direccion = rand() % 4;
 		int nummov = rand() % MOVER_ALCANCE + 1;
-		/*printf("Dir: %d\n", direccion);
-		printf("N_mov: %d\n", nummov);
-		printf("pos x %d\n", nave->posx );
-		printf("pos y %d\n", nave->posy );*/
 		switch(direccion) {
 			case 0:
 				if (mapa_is_casilla_vacia(mapa, nave->posy + nummov, nave->posx) && (nave->posy + nummov < MAPA_MAXY)){
