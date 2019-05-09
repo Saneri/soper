@@ -53,7 +53,7 @@ typedef struct {
 	char texto[80];
 } Mensaje;
 
-#define SHM_MAP_NAME "/shm_naves"
+#define SHM_MAP_NAME "/shm_mapa"
 #define MQ_NAME "/mq_simulador"
 #define SEM_SYNC_MONITOR "/sync_monitor"
 #define SEM_SYNC_SIMJEFE "/sync_simjefe"

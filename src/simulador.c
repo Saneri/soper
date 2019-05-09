@@ -126,6 +126,7 @@ int proceso_simulador() {
 	char *msg_sim = "TURNO";	
 
 	while (sigue_jugando) {
+		printf("Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
 			write(pipes[i][1], msg_sim, strlen(msg_sim));  
