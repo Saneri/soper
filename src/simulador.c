@@ -46,7 +46,7 @@ int pipes[N_EQUIPOS][2];
  * @brief rutina para librar todas las recursos que ha utilizado proceso simulador
  */
 void librar_recursos_proceso_simulador() {
-	printf("Librando recursos\n");
+	printf("Simulador: Librando recursos\n");
 	if (recurso_mmap) {
 		munmap(mapa, sizeof(*mapa));
 	}
@@ -130,7 +130,7 @@ int proceso_simulador() {
 			// Wait until every nave has written to mqueue
 			if (mq_receive(queue, (char*) &msg, sizeof(msg), NULL) == -1) {
 				perror("(mq_receive) No se pudo recoger mensaje");
-				return -1;
+				//return -1;
 			}
 			printf("simulador: recibido en cola de mensajes\n");
 		}
@@ -145,8 +145,9 @@ int proceso_simulador() {
 	for (int i=0; i<N_EQUIPOS; i++) {
 		write(pipes[i][1], msg_sim_fin, sizeof(msg_sim_fin));
 		sem_post(sem_simjefe);
-		close(pipes[i][1]);
 	}
+	
+	//close(pipes[i][1]);
 	return 0;
 }
 
