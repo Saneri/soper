@@ -49,9 +49,9 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 	// La rutina del jefe
 	close(sim_pipe[1]);
 	char msg_sim[80];
-	char *msg_nave_mover = "MOVER_ALEATORIO";
-	char *msg_nave_atacar = "ATACAR";
-	char *msg_nave_fin = "FIN";
+	char msg_nave_mover[] = "MOVER_ALEATORIO";
+	char msg_nave_atacar[] = "ATACAR";
+	char msg_nave_fin[] = "FIN";
 	while (1) {
 		printf("Sim Jefe %d: leyendo siguente mensaje del PIPE\n", num_jefe);
 		sem_wait(sem_simjefe);	
@@ -60,7 +60,8 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 		if (strcmp(msg_sim, "TURNO") == 0) {
 			for (int i=0; i<N_NAVES; i++) {
 				write(pipes[i][1], msg_nave_mover, sizeof(msg_nave_mover));
-				//write(pipes[i][1], msg_nave_atacar, sizeof(msg_nave_atacar));
+				sleep(1);
+				write(pipes[i][1], msg_nave_atacar, sizeof(msg_nave_atacar));
 			}
 		} else if (strcmp(msg_sim, "FIN") == 0) {
 			for (int i=0; i<N_NAVES; i++) {
@@ -74,9 +75,6 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 			perror("Jefe ha sacado un mensaje invalido");
 			exit(EXIT_FAILURE);
 		}
-		//memset(msg_sim, 0, sizeof(msg_sim));
-		sleep(1);
-
 	}
 	exit(EXIT_FAILURE); // No deberia que llegar hasta aqui
 }

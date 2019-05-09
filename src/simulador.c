@@ -126,7 +126,7 @@ int proceso_simulador() {
 	/////////////////////
 
 	Mensaje msg;
-	char *msg_sim = "TURNO";	
+	char msg_sim[] = "TURNO";	
 	
 	int num_naves_total = N_EQUIPOS * N_NAVES;
 	for (int i=0; i<num_naves_total; i++) {
@@ -136,6 +136,7 @@ int proceso_simulador() {
 		}
 	}
 	while (sigue_jugando) {
+		num_naves_total = 0;
 		printf("Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
@@ -160,9 +161,9 @@ int proceso_simulador() {
 	}
 	
 	// Finalizar jefes
-	char *msg_sim_fin = "FIN";
+	char msg_sim_fin[] = "FIN";
 	for (int i=0; i<N_EQUIPOS; i++) {
-		write(pipes[i][1], msg_sim_fin, strlen(msg_sim_fin));
+		write(pipes[i][1], msg_sim_fin, sizeof(msg_sim_fin));
 		sem_post(sem_simjefe);
 		close(pipes[i][1]);
 	}
@@ -299,7 +300,7 @@ int init() {
 	}
 	recurso_sem_simjefe = 1;
 	
-	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;
 	}
