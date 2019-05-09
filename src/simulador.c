@@ -24,7 +24,7 @@
 #include "mapa.h"
 #include "jefe.h"
 
-const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0},
+const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -125,7 +125,7 @@ void proceso_simulador() {
 		// Rutina de turnos aqui
 		tipo_nave nave = mapa_get_nave(mapa, 1, 1);
 		nave_mover_aleatorio(mapa, &nave);
-		/*nave_atacar(mapa,&nave);*/
+		nave_atacar(mapa,&nave);
 		sleep(TURNO_SECS);
 	}
 
@@ -159,20 +159,20 @@ void init_mapa() {
 
 				tipo_nave new_nave;
 				new_nave.vida = VIDA_MAX;
-				new_nave.posx = 0;
-				new_nave.posy = 0;
-				new_nave.equipo = n_equipo;
-				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo);
+				new_nave.posx = j;
+				new_nave.posy = i;
+				new_nave.equipo = n_equipo - 1;
+				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo - 1);
 				new_nave.viva = true;
 				mapa_set_nave(mapa, new_nave);
 
-				tipo_casilla new_casilla;
+				/*tipo_casilla new_casilla;
 				new_casilla.simbolo = n_equipo + '0';
 				new_casilla.equipo = n_equipo;
 				new_casilla.numNave = mapa_get_num_naves(mapa, n_equipo);
-				mapa->casillas[i][j] = new_casilla;
+				mapa->casillas[i][j] = new_casilla;*/
 
-				mapa_set_num_naves(mapa, n_equipo, mapa_get_num_naves(mapa, n_equipo) + 1);
+				mapa_set_num_naves(mapa, n_equipo - 1, mapa_get_num_naves(mapa, n_equipo - 1) + 1);
 
 			}
 
