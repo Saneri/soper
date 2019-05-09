@@ -120,17 +120,21 @@ int proceso_simulador() {
 	// Empieza a jugar //
 	/////////////////////
 
-	sleep(2); // solo para probar
-	
-	int num_naves_total = 0;
 	Mensaje msg;
 	char *msg_sim = "TURNO";	
 	
+	int num_naves_total = N_EQUIPOS * N_NAVES;
+	for (int i=0; i<num_naves_total; i++) {
+		if (mq_receive(queue, (char*) &msg, sizeof(msg), NULL) == -1) {
+			perror("(mq_receive) No se pudo recoger mensaje");
+			return -1;
+		}
+	}
 	while (sigue_jugando) {
 		printf("Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
-			write(pipes[i][1], msg_sim, strlen(msg_sim));  
+			write(pipes[i][1], msg_sim, sizeof(msg_sim));  
 			num_naves_total += mapa_get_num_naves(mapa, i);
 			sem_post(sem_simjefe);
 		}
@@ -144,7 +148,7 @@ int proceso_simulador() {
 			}
 			printf("simulador: recibido en cola de mensajes\n");
 		}
-		sleep(1);
+		sleep(TURNO_SECS);
 		// Finalizar el turno 
 		mapa_restore(mapa);
 		check_winner();	
@@ -291,7 +295,7 @@ int init() {
 	recurso_sem_simjefe = 1;
 
 	// Inicializar tuberias para comunicar con jefes
-	for (int i=0; i<N_EQUIPOS ; i++) {
+	for (int i=0; i<N_EQUIPOS; i++) {
 		int pipe_status = pipe(pipes[i]);
 		if (pipe_status < 0) {
 			perror("(pipe) No se pudo inicializar pipe del simulador");
@@ -309,9 +313,7 @@ int init() {
 		} else if (pid == 0) {	// Jefe (proceso hijo)
 			ejecutar_jefe(i, pipes[i]);
 
-		} else {		// Simulador (proceso padre)
-		
-		}
+		} // Simulador (proceso padre)
 	}
 	int sim_error = proceso_simulador();
 	if (sim_error < 0) {

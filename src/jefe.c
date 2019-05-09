@@ -15,9 +15,9 @@
 void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 	pid_t pid;
 
+	// Inicializar tuberias para comunicar con las naves
 	int pipes[N_NAVES][2];
 	for (int i=0; i<N_NAVES; i++) {
-		// Inicializar tuberias para comunicar con las naves
 		int pipe_status = pipe(pipes[i]);
 		if (pipe_status < 0) {
 			perror("(pipe) No se pudo inicializar pipe de la nave");
@@ -34,8 +34,6 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 		} else if (pid == 0) {
 			ejecutar_nave(num_jefe, i, pipes[i]);	
 			exit(EXIT_SUCCESS);
-		} else {
-			close(pipes[i][0]);
 		}
 	}
 	
@@ -44,6 +42,9 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 		perror("(sem_open) No se pudo abrir semafor");
 		exit(EXIT_FAILURE);
 	}
+	for (int i=0; i<N_NAVES; i++) {
+		close(pipes[i][0]);
+	}
 
 	// La rutina del jefe
 	close(sim_pipe[1]);
@@ -51,12 +52,11 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 	char *msg_nave_mover = "MOVER_ALEATORIO";
 	char *msg_nave_atacar = "ATACAR";
 	char *msg_nave_fin = "FIN";
-
 	while (1) {
 		printf("Sim Jefe %d: leyendo siguente mensaje del PIPE\n", num_jefe);
 		sem_wait(sem_simjefe);	
 		read(sim_pipe[0], msg_sim, sizeof(msg_sim));
-		printf("Jefe: %s\n", msg_sim);
+		printf("Jefe: %s\n", msg_sim);	
 		if (strcmp(msg_sim, "TURNO") == 0) {
 			for (int i=0; i<N_NAVES; i++) {
 				write(pipes[i][1], msg_nave_mover, sizeof(msg_nave_mover));
@@ -67,8 +67,14 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 				write(pipes[i][1], msg_nave_fin, sizeof(msg_nave_fin));
 			}	
 			exit(EXIT_SUCCESS);
+		} else {
+			for (int i=0; i<N_NAVES; i++) {
+                                write(pipes[i][1], msg_nave_fin, sizeof(msg_nave_fin));
+                        }
+			perror("Jefe ha sacado un mensaje invalido");
+			exit(EXIT_FAILURE);
 		}
-		memset(msg_sim, 0, sizeof(msg_sim));
+		//memset(msg_sim, 0, sizeof(msg_sim));
 		sleep(1);
 
 	}

@@ -54,7 +54,6 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 		perror("(mq_send) No se pudo enviar mensaje");
 		return -1;
 	}
-	printf("NAVE MESSAGE SENT\n");
 	char msg_jefe[80];
 	while (1) {
 		printf("Sim Nave %d/%d: leyendo siguiente mensaje del PIPE\n", num_jefe, num_nave);
