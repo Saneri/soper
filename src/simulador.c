@@ -114,13 +114,14 @@ int proceso_simulador() {
 		close(pipes[i][0]);
 	}	
 	sem_post(sem_monitor);
-
+	
 	/////////////////////
 	// Empieza a jugar //
 	/////////////////////
 	
-	char *msg_sim = "TURNO";	
 	int num_naves_total = 0;
+	Mensaje msg;
+	char *msg_sim = "TURNO";	
 	while (sigue_jugando) {
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
@@ -132,6 +133,11 @@ int proceso_simulador() {
 		printf("Simulador: eschuchando cola mensajes\n");
 		for (int i=0; i<num_naves_total; i++) {
 			// Wait until every nave has written to mqueue
+			if (mq_receive(queue, (char*) &msg, sizeof(msg), NULL) == -1) {
+				perror("(mq_receive) No se pudo recoger mensaje");
+				return -1;
+			}
+			printf("simulador: recibido en cola de mensajes\n");
 		}
 
 		sleep(1);
@@ -141,12 +147,12 @@ int proceso_simulador() {
 	}
 	
 	// Finalizar jefes
-	msg_sim = "FIN";
+	char *msg_sim_fin = "FIN";
 	for (int i=0; i<N_EQUIPOS; i++) {
-		write(pipes[i][1], msg_sim, strlen(msg_sim));
+		write(pipes[i][1], msg_sim_fin, strlen(msg_sim_fin));
 		sem_post(sem_simjefe);
+		close(pipes[i][1]);
 	}
-
 	return 0;
 }
 

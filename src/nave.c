@@ -15,6 +15,12 @@
 #include "nave.h"
 #include "mapa.h"
 
+/*
+ * @brief Crear nuevo struct tipo_nave
+ * @param num_jefe el numero identificador del jefe de la nave y del equipo
+ * @param num_nave el numero identificador del numero de la nave dentro del equipo
+ * @return Struct tipo_nave inicializado
+ */
 tipo_nave crear_nave (int num_jefe, int num_nave) {
 	
 	tipo_nave new_nave;
@@ -31,11 +37,44 @@ tipo_nave crear_nave (int num_jefe, int num_nave) {
  * @brief Funcion para ejecutar tipo_nave
  * @param num_jefe el numero identificador del jefe de la nave y del equipo
  * @param num_nave el numero identificador del numero de la nave dentro del equipo
+ * @param pipe_jefe[2] la tuberia que se utiliza para comuniacion enter jefe y nave
  */
-int ejecutar_nave(int num_jefe, int num_nave) {
+int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
+	
+	mqd_t queue = mq_open(MQ_NAME, O_WRONLY, S_IRUSR | S_IWUSR, NULL);
+	if (queue == (mqd_t) -1) {
+		perror("(mq_open) No se pudo abrir la cola de mensajes de la nave");
+		return -1;
+	}
+	close(pipe_jefe[1]);
 
+	Mensaje msg;
+	strcpy(msg.texto, "NAVE_LISTO");
+	
+	char msg_jefe[80];
 	while (1) {
-		// La rutina del nave
+		printf("Sim Nave %d/%d: leyendo siguiente mensaje del PIPE\n", num_jefe, num_nave);
+		read(pipe_jefe[0], msg_jefe, sizeof(msg_jefe));
+		printf("Nave: %s\n", msg_jefe);
+		if (strcmp(msg_jefe, "MOVER_ALEATORIO") == 0) {
+			printf("MOVER_ALEATORIO\n");
+		} else if (strcmp(msg_jefe, "ATACAR") == 0) {
+			printf("ATACAR\n");
+		} else if (strcmp(msg_jefe, "FIN") == 0) {
+			close(pipe_jefe[0]);
+			mq_close(queue);
+			return 0;
+		} else {
+			perror("Nave ha sacado un mensaje invalido");
+			close(pipe_jefe[0]);
+			mq_close(queue);
+			return -1;
+		}
+		memset(msg_jefe, 0, sizeof(msg_jefe));
+		if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
+			perror("(mq_send) No se pudo enviar mensaje");
+			return -1;
+		}
 	}
 	return -1;
 }

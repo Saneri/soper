@@ -9,32 +9,33 @@
 #include "nave.h"
 
 /*
- * @brief 
+ * @brief La rutina del proceso jefe 
  * @param i el numero identificador del jefe
  */
 void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 	pid_t pid;
 
 	int pipes[N_NAVES][2];
+	for (int i=0; i<N_NAVES; i++) {
+		// Inicializar tuberias para comunicar con las naves
+		int pipe_status = pipe(pipes[i]);
+		if (pipe_status < 0) {
+			perror("(pipe) No se pudo inicializar pipe de la nave");
+			exit(EXIT_FAILURE);
+		}
 
-	for (int i=0; i<N_NAVES ; i++) {
+	}
+
+	for (int i=0; i<N_NAVES; i++) {
 		pid = fork();
 		if (pid < 0) {
 			perror("(fork) No se pudo inicializar proceso nave");
 			exit(EXIT_FAILURE);
 		} else if (pid == 0) {
-			printf("CREANDO NAVE %d %d\n", num_jefe, i);
-			//ejecutar_nave(num_jefe, i, pipes[i]);	
+			ejecutar_nave(num_jefe, i, pipes[i]);	
 			exit(EXIT_SUCCESS);
 		} else {
-			// Inicializar tuberias para comunicar con las naves
-			int pipe_status = pipe(pipes[i]);
-			if (pipe_status < 0) {
-				perror("(pipe) No se pudo inicializar pipe de la nave");
-				exit(EXIT_FAILURE);
-			}
 			close(pipes[i][0]);
-
 		}
 	}
 	
@@ -44,22 +45,30 @@ void ejecutar_jefe(int num_jefe, int sim_pipe[2]) {
 		exit(EXIT_FAILURE);
 	}
 
+	// La rutina del jefe
 	close(sim_pipe[1]);
 	char msg_sim[80];
-	// La rutina del jefe
+	char *msg_nave_mover = "MOVER_ALEATORIO";
+	char *msg_nave_atacar = "ATACAR";
+	char *msg_nave_fin = "FIN";
+
 	while (1) {
 		printf("Sim Jefe %d: leyendo siguente mensaje del PIPE\n", num_jefe);
 		sem_wait(sem_simjefe);	
 		read(sim_pipe[0], msg_sim, sizeof(msg_sim));
 		printf("Jefe: %s\n", msg_sim);
 		if (strcmp(msg_sim, "TURNO") == 0) {
-			// Enviar MOVER_ALEATORIO y ATACAR
-			printf("JEFE TURNO !\n");
+			for (int i=0; i<N_NAVES; i++) {
+				write(pipes[i][1], msg_nave_mover, sizeof(msg_nave_mover));
+				write(pipes[i][1], msg_nave_atacar, sizeof(msg_nave_atacar));
+			}
 		} else if (strcmp(msg_sim, "FIN") == 0) {
-			// Enviar FIN y acabar este proceso
-			
+			for (int i=0; i<N_NAVES; i++) {
+				write(pipes[i][1], msg_nave_fin, sizeof(msg_nave_fin));
+			}	
 			exit(EXIT_SUCCESS);
 		}
+		memset(msg_sim, 0, sizeof(msg_sim));
 		sleep(1);
 
 	}

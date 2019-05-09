@@ -49,6 +49,10 @@ typedef struct {
 	int num_naves[N_EQUIPOS]; // Número de naves vivas en un equipo
 } tipo_mapa;
 
+typedef struct {
+	char texto[80];
+} Mensaje;
+
 #define SHM_MAP_NAME "/shm_naves"
 #define MQ_NAME "/mq_simulador"
 #define SEM_SYNC_MONITOR "/sync_monitor"
