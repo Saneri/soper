@@ -4,7 +4,7 @@
 #include "simulador.h"
 
 // Constructor de tipo_nave
-tipo_nave crear_nave(int num_jefe, int num_nave);
+tipo_nave crear_nave(int num_jefe, int num_nave, int posx, int posy);
 
 // Ejecucion y la rutina del nave
 int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]);

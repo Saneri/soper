@@ -212,40 +212,12 @@ int init_mapa() {
 				int posx = rand() % MAPA_MAXX;
 				int posy = rand() % MAPA_MAXY;
 				if (mapa_is_casilla_vacia(mapa, posy, posx)){
-					tipo_nave new_nave;
-					new_nave.vida = VIDA_MAX;
-					new_nave.posx = posx;
-					new_nave.posy = posy;
-					new_nave.equipo = equipo;
-					new_nave.numNave = n_nave;
-					new_nave.viva = true;
+					tipo_nave new_nave = crear_nave (equipo, n_nave, posx,posy);
 					mapa_set_nave(mapa, new_nave);
 					entered = true;
 				}
 			}
-			/* code */
 		}
-		/* code */
-	}
-/*
-	for (int i=0; i<MAPA_MAXY; i++) {
-		for (int j=0; j<MAPA_MAXX; j++) {
-			int n_equipo = INICIO_NAVES[i][j];
-			if (n_equipo == 0) {
-				tipo_casilla new_casilla;
-				new_casilla.simbolo = '.';
-				new_casilla.equipo = -1;
-				new_casilla.numNave = -1;
-				mapa->casillas[i][j] = new_casilla;
-			}  else if (n_equipo < 0) {
-				perror("No se puede asignar un numero negativo para la mapa");
-				return -1;
-			} else {
-				tipo_nave new_nave = crear_nave(n_equipo, mapa_get_num_naves(mapa, n_equipo));
-				mapa_set_nave(mapa, new_nave);
-				mapa_set_num_naves(mapa, n_equipo, mapa_get_num_naves(mapa, n_equipo) + 1);
-			}
-		}	
 	}
 	return 0;
 }
