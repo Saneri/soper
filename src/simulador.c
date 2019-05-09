@@ -140,10 +140,47 @@ void proceso_simulador() {
 void init_mapa() {
 	printf("Inicializando el mapa\n");
 
-	for (int i=0; i<N_EQUIPOS; i++) {
-		mapa_set_num_naves(mapa, i, 0);
+	if(N_NAVES * N_EQUIPOS > MAPA_MAXX * MAPA_MAXY){
+		printf("Hay mas naves que espacios en el mapa\n");
 	}
 
+	for (int i=0; i<N_EQUIPOS; i++) {
+		mapa_set_num_naves(mapa, i, N_NAVES);
+	}
+
+	for (int i=0; i<MAPA_MAXY; i++) {
+		for (int j=0; j<MAPA_MAXX; j++) {
+				tipo_casilla new_casilla;
+				new_casilla.simbolo = '.';
+				new_casilla.equipo = -1;
+				new_casilla.numNave = -1;
+				mapa->casillas[i][j] = new_casilla;
+		}
+	}
+
+	for (int equipo = 0; equipo < N_EQUIPOS; equipo++) {
+		for (int n_nave = 0; n_nave < N_NAVES; n_nave++) {
+			bool entered = false;
+			while (!entered) {
+				int posx = rand() % MAPA_MAXX;
+				int posy = rand() % MAPA_MAXY;
+				if (mapa_is_casilla_vacia(mapa, posy, posx)){
+					tipo_nave new_nave;
+					new_nave.vida = VIDA_MAX;
+					new_nave.posx = posx;
+					new_nave.posy = posy;
+					new_nave.equipo = equipo;
+					new_nave.numNave = n_nave;
+					new_nave.viva = true;
+					mapa_set_nave(mapa, new_nave);
+					entered = true;
+				}
+			}
+			/* code */
+		}
+		/* code */
+	}
+/*
 	for (int i=0; i<MAPA_MAXY; i++) {
 		for (int j=0; j<MAPA_MAXX; j++) {
 			int n_equipo = INICIO_NAVES[i][j];
@@ -168,7 +205,7 @@ void init_mapa() {
 			}
 		}
 	}
-
+*/
 
 }
 

@@ -36,7 +36,6 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 	int origeny = nave->posy;
 	int equipoNave = nave->equipo;
 	int i;
-	printf("%d\n",direccion );
 	switch (direccion){
 		case 0:
 					i = -20;
