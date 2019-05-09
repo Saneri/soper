@@ -9,6 +9,9 @@ tipo_nave crear_nave(int num_jefe, int num_nave, int posx, int posy);
 // Ejecucion y la rutina del nave
 int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]);
 
+// Librar recursos de nave si los ha usado
+void nave_librar_recursos();
+
 // funcion para cambiar posicion de la nave
 int nave_cambiarposicion(tipo_mapa *mapa, tipo_nave *nave, int posy, int posx);
 

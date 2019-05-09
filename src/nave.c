@@ -16,6 +16,14 @@
 #include "nave.h"
 #include "mapa.h"
 
+int fd_shm;
+tipo_mapa *mapa;
+sem_t *sem_mapa;
+mqd_t queue;
+int recurso_nave_mmap = 0;
+int recurso_nave_sem_mapa = 0;
+int recurso_nave_queue = 0;
+
 /*
  * @brief Crear nuevo struct tipo_nave
  * @param num_jefe el numero identificador del jefe de la nave y del equipo
@@ -42,45 +50,47 @@ tipo_nave crear_nave (int num_jefe, int num_nave, int posx, int posy) {
  */
 int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 
-	int fd_shm = shm_open(SHM_MAP_NAME, O_RDWR, S_IRUSR | S_IWUSR);
+	fd_shm = shm_open(SHM_MAP_NAME, O_RDWR, S_IRUSR | S_IWUSR);
         if (fd_shm < 0) {
                 perror("(shm_open) No se pudo abrir la memoria compartida");
                 return -1;
         }
 
-        tipo_mapa *mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
-        
+        mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
 	if (mapa == MAP_FAILED) {
+		nave_librar_recursos();
                 perror("(mmap) No se pudo mapear la memoria compartida de mapa");
                 return -1;
         }
+	recurso_nave_mmap = 1;
 
         if (ftruncate(fd_shm, sizeof(tipo_mapa)) == -1) {
+		nave_librar_recursos();
                 perror("(ftruncate) nave failed to resize memory");
-                munmap(mapa, sizeof(tipo_mapa));
                 return -1;
         }
 
 		
-	sem_t *sem_mapa;
 	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED) {
+		nave_librar_recursos();
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;
 	}
+	recurso_nave_sem_mapa = 1;
 
-	mqd_t queue = mq_open(MQ_NAME, O_WRONLY, S_IRUSR | S_IWUSR, NULL);
+	queue = mq_open(MQ_NAME, O_WRONLY, S_IRUSR | S_IWUSR, NULL);
 	if (queue == (mqd_t) -1) {
-		sem_close(sem_mapa);
+		nave_librar_recursos();
 		perror("(mq_open) No se pudo abrir la cola de mensajes de la nave");
 		return -1;
 	}
+	recurso_nave_queue = 1;
 	close(pipe_jefe[1]);
 
 	Mensaje msg;
 	strcpy(msg.texto, "NAVE_LISTO");
 	if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
-		sem_close(sem_mapa);
-		mq_close(queue);
+		nave_librar_recursos();
 		perror("(mq_send) No se pudo enviar mensaje");
 		return -1;
 	}
@@ -99,26 +109,34 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 			nave_atacar(mapa, &nave);
 			sem_post(sem_mapa);
 			if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
-				sem_close(sem_mapa);
-				mq_close(queue);
+				nave_librar_recursos();
 				perror("(mq_send) No se pudo enviar mensaje");
 				return -1;
 			}
 		} else if (strcmp(msg_jefe, "FIN") == 0) {
-			close(pipe_jefe[0]);
-			mq_close(queue);
+			nave_librar_recursos();
 			return 0;
 		} else {
+			nave_librar_recursos();
 			perror("Nave ha sacado un mensaje invalido");
-			close(pipe_jefe[0]);
-			sem_close(sem_mapa);
-			mq_close(queue);
 			return -1;
 		}
 		memset(msg_jefe, 0, sizeof(msg_jefe));
 	
 	}
 	return -1;
+}
+
+void nave_librar_recursos() {
+	if (recurso_nave_mmap) {
+		munmap(mapa, sizeof(*mapa));
+	}
+	if (recurso_nave_sem_mapa) {
+		sem_close(sem_mapa);
+	}
+	if (recurso_nave_queue) {
+		mq_close(queue);
+	}
 }
 
 /*
