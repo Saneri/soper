@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-char symbol_equipos[N_EQUIPOS] ={'A','B','C'};
+char symbol_equipos[N_EQUIPOS] = {'A','B','C'};
 
 
 int mapa_clean_casilla(tipo_mapa *mapa, int posy, int posx)

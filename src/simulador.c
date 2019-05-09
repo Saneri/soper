@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <mqueue.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,10 +52,12 @@ int recurso_shared_memory = 0;
 int recurso_mmap = 0;
 int recurso_mqueue = 0;
 int recurso_sem_monitor = 0;
+int recurso_sem_simjefe = 0;
 tipo_mapa* mapa;
 mqd_t queue;
 sem_t *sem_monitor = NULL;
-
+sem_t *sem_simjefe = NULL;
+int pipes[N_EQUIPOS][2];
 
 
 /*
@@ -72,6 +75,11 @@ void librar_recursos_proceso_simulador() {
 		sem_close(sem_monitor);
 		sem_unlink(SEM_SYNC_MONITOR);
 	}
+
+	if (recurso_sem_simjefe) {
+		sem_close(sem_simjefe);
+		sem_unlink(SEM_SYNC_SIMJEFE);
+	}
 }
 
 /*
@@ -85,7 +93,7 @@ void manejador_SIGINT(int sig) {
 /*
  * @brief La rutina del proceso simulador que es el padre de los jefes
  */
-void proceso_simulador() {
+int proceso_simulador() {
 
 	// Inicializar message queue
 	printf("Simulador gestionando MQ\n");
@@ -98,46 +106,85 @@ void proceso_simulador() {
 	queue = mq_open(MQ_NAME, O_CREAT | O_EXCL | O_RDONLY, S_IRUSR | S_IWUSR, &attributes);
 	if (queue == (mqd_t) -1) {
 		perror("(mq_open) No se pudo abrir la cola de mensajes para el simulador");
-		return;
+		return -1;
 	}
-	recurso_mqueue = 1;
 
-	// Inicializar tuberias para comunicar con jefes
-	int pipes[N_EQUIPOS][2];
-	for (int i=0; i<N_EQUIPOS ; i++) {
-		int pipe_status = pipe(pipes[i]);
-		if (pipe_status < 0) {
-			perror("(pipe) No se pudo inicializar pipe del simulador");
-			return;
-		}
+	recurso_mqueue = 1;	
+	
+	for (int i=0; i<N_EQUIPOS; i++) {
 		close(pipes[i][0]);
-	}
-
+	}	
 	sem_post(sem_monitor);
-
+	
 	/////////////////////
 	// Empieza a jugar //
 	/////////////////////
 
+	
+	int num_naves_total = 0;
+	Mensaje msg;
+	char *msg_sim = "TURNO";	
+
 	while (sigue_jugando) {
+		// Enviar mensaje TURNO a cada jefe
+		for (int i=0; i<N_EQUIPOS; i++) {
+			write(pipes[i][1], msg_sim, strlen(msg_sim));  
+			num_naves_total += mapa_get_num_naves(mapa, i);
+		}
+		sem_post(sem_simjefe);
 
-		printf("Simulador: Nuevo TURNO\n");
-		// Rutina de turnos aqui
-		tipo_nave nave = mapa_get_nave(mapa, 1, 1);
-		nave_mover_aleatorio(mapa, &nave);
-		nave_atacar(mapa,&nave);
-		sleep(TURNO_SECS);
+		printf("Simulador: eschuchando cola mensajes\n");
+		for (int i=0; i<num_naves_total; i++) {
+			// Wait until every nave has written to mqueue
+			if (mq_receive(queue, (char*) &msg, sizeof(msg), NULL) == -1) {
+				perror("(mq_receive) No se pudo recoger mensaje");
+				return -1;
+			}
+			printf("simulador: recibido en cola de mensajes\n");
+		}
+		sleep(1);
+		// Finalizar el turno 
+		mapa_restore(mapa);
+		check_winner();	
 	}
+	
+	// Finalizar jefes
+	char *msg_sim_fin = "FIN";
+	for (int i=0; i<N_EQUIPOS; i++) {
+		write(pipes[i][1], msg_sim_fin, strlen(msg_sim_fin));
+		sem_post(sem_simjefe);
+		close(pipes[i][1]);
+	}
+	return 0;
+}
 
-
-
+/*
+ * @brief Comprobar si el juego tiene ganador
+ */
+void check_winner() {
+	int n_equipos_vivos = 0;
+	int ganador = 0;
+	for (int i=0 ; i<N_EQUIPOS ; i++) {
+		if (mapa->num_naves[i] > 0) {
+		       n_equipos_vivos++;
+		       ganador = i;
+		}		
+	}
+	if (n_equipos_vivos < 2) {
+		sigue_jugando = 0;
+		if (n_equipos_vivos) {
+			printf("The winner is team number %d!\n", ganador);
+		} else {
+			perror("No hay ganador!");
+		}
+	}
 }
 
 
 /*
  * @brief
  */
-void init_mapa() {
+int init_mapa() {
 	printf("Inicializando el mapa\n");
 
 	if(N_NAVES * N_EQUIPOS > MAPA_MAXX * MAPA_MAXY){
@@ -184,29 +231,23 @@ void init_mapa() {
 	for (int i=0; i<MAPA_MAXY; i++) {
 		for (int j=0; j<MAPA_MAXX; j++) {
 			int n_equipo = INICIO_NAVES[i][j];
-			if(n_equipo == 0){
+			if (n_equipo == 0) {
 				tipo_casilla new_casilla;
 				new_casilla.simbolo = '.';
 				new_casilla.equipo = -1;
 				new_casilla.numNave = -1;
 				mapa->casillas[i][j] = new_casilla;
-			}  else if (n_equipo < 0){
-				//ERROR
+			}  else if (n_equipo < 0) {
+				perror("No se puede asignar un numero negativo para la mapa");
+				return -1;
 			} else {
-				tipo_nave new_nave;
-				new_nave.vida = VIDA_MAX;
-				new_nave.posx = j;
-				new_nave.posy = i;
-				new_nave.equipo = n_equipo - 1;
-				new_nave.numNave = mapa_get_num_naves(mapa, n_equipo - 1);
-				new_nave.viva = true;
+				tipo_nave new_nave = crear_nave(n_equipo, mapa_get_num_naves(mapa, n_equipo));
 				mapa_set_nave(mapa, new_nave);
-				mapa_set_num_naves(mapa, n_equipo - 1, mapa_get_num_naves(mapa, n_equipo - 1) + 1);
+				mapa_set_num_naves(mapa, n_equipo, mapa_get_num_naves(mapa, n_equipo) + 1);
 			}
-		}
+		}	
 	}
-*/
-
+	return 0;
 }
 
 
@@ -245,7 +286,10 @@ int init() {
 
 
 	// Inicializar mapa
-	init_mapa();
+	if (init_mapa() < 0) {
+		perror("Hay algo mal en la inicializacion de la mapa");
+		return -1;
+	}
 
 	// Inicializar el manejador para SIGINT
 	printf("Simulador gestionando senales\n");
@@ -257,14 +301,29 @@ int init() {
 		perror("No se pudo agregar el manejador SIGINT");
 		return -1;
 	}
-
-	// Inicializar semaforo
+	
+	// Inicializar semaforos
 	printf("Simulador gestionando semaforos\n");
 	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;
 	}
 	recurso_sem_monitor = 1;
+
+	if ((sem_simjefe = sem_open(SEM_SYNC_SIMJEFE, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+	recurso_sem_simjefe = 1;
+
+	// Inicializar tuberias para comunicar con jefes
+	for (int i=0; i<N_EQUIPOS ; i++) {
+		int pipe_status = pipe(pipes[i]);
+		if (pipe_status < 0) {
+			perror("(pipe) No se pudo inicializar pipe del simulador");
+			return -1;
+		}
+	}
 
 	// Crear procesos jefes
 	pid_t pid;
@@ -273,15 +332,18 @@ int init() {
 		if (pid < 0) {
 			perror("(fork) No se pudo crear nuevo proceso");
 			return -1;
-		} else if (pid == 0) {
-			// Jefe (proceso hijo)
-			ejecutar_jefe(i);
-		} else {
-			// Simulador (proceso padre)
+		} else if (pid == 0) {	// Jefe (proceso hijo)
+			ejecutar_jefe(i, pipes[i]);
 
+		} else {		// Simulador (proceso padre)
+		
 		}
 	}
-	proceso_simulador();
+	int sim_error = proceso_simulador();
+	if (sim_error < 0) {
+		perror("Proceso simulador no ha ejecutado correctamente");
+		return -1;
+	}
 
 	// Espera a todos los jefes
 	for (int i=0; i<N_EQUIPOS; i++) {

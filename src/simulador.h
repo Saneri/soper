@@ -49,9 +49,14 @@ typedef struct {
 	int num_naves[N_EQUIPOS]; // Número de naves vivas en un equipo
 } tipo_mapa;
 
+typedef struct {
+	char texto[80];
+} Mensaje;
+
 #define SHM_MAP_NAME "/shm_naves"
 #define MQ_NAME "/mq_simulador"
 #define SEM_SYNC_MONITOR "/sync_monitor"
+#define SEM_SYNC_SIMJEFE "/sync_simjefe"
 
 // La mapa antes de inicializar el juego
 const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX];
@@ -63,10 +68,13 @@ void librar_recursos_proceso_simulador();
 void manejador_SIGINT(int sig);
 
 // La rutina del proceso simulador
-void proceso_simulador();
+int proceso_simulador();
+
+// Comprobar si alguien ha ganado
+void check_winner();
 
 // Inicializar las posiciones de la mapa
-void init_mapa();
+int init_mapa();
 
 // Inicializar la simulación
 int init();
