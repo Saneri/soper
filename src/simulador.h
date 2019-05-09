@@ -21,7 +21,7 @@ extern char symbol_equipos[N_EQUIPOS]; // Símbolos de los diferentes equipos en
 #define ATAQUE_ALCANCE 20 // Distancia máxima de un ataque
 #define ATAQUE_DANO 10 // Daño de un ataque
 #define MOVER_ALCANCE 1 // Máximo de casillas a mover
-#define TURNO_SECS 5 // Segundos que dura un turno
+#define TURNO_SECS 1 // Segundos que dura un turno
 
 
 /*** MAPA ***/
