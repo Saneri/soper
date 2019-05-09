@@ -53,10 +53,12 @@ int recurso_mmap = 0;
 int recurso_mqueue = 0;
 int recurso_sem_monitor = 0;
 int recurso_sem_simjefe = 0;
+int recurso_sem_mapa = 0;
 tipo_mapa* mapa;
 mqd_t queue;
 sem_t *sem_monitor = NULL;
 sem_t *sem_simjefe = NULL;
+sem_t *sem_mapa = NULL;
 int pipes[N_EQUIPOS][2];
 
 
@@ -74,11 +76,14 @@ void librar_recursos_proceso_simulador() {
 	if (recurso_sem_monitor) {
 		sem_close(sem_monitor);
 		sem_unlink(SEM_SYNC_MONITOR);
-	}
-
+	}	
 	if (recurso_sem_simjefe) {
 		sem_close(sem_simjefe);
 		sem_unlink(SEM_SYNC_SIMJEFE);
+	}
+	if (recurso_sem_mapa) {
+		sem_close(sem_mapa);
+		sem_unlink(SEM_MAPA);
 	}
 }
 
@@ -293,6 +298,12 @@ int init() {
 		return -1;
 	}
 	recurso_sem_simjefe = 1;
+	
+	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+	recurso_sem_mapa = 1;
 
 	// Inicializar tuberias para comunicar con jefes
 	for (int i=0; i<N_EQUIPOS; i++) {

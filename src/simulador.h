@@ -55,8 +55,9 @@ typedef struct {
 
 #define SHM_MAP_NAME "/shm_mapa"
 #define MQ_NAME "/mq_simulador"
-#define SEM_SYNC_MONITOR "/sync_monitor"
-#define SEM_SYNC_SIMJEFE "/sync_simjefe"
+#define SEM_SYNC_MONITOR "/sem_sync_monitor"
+#define SEM_SYNC_SIMJEFE "/sem_sync_simjefe"
+#define SEM_MAPA "/sem_mapa"
 
 // La mapa antes de inicializar el juego
 const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX];

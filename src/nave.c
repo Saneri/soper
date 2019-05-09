@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #include "simulador.h"
 #include "nave.h"
@@ -41,8 +42,15 @@ tipo_nave crear_nave (int num_jefe, int num_nave, int posx, int posy) {
  */
 int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 	
+	sem_t *sem_mapa;
+	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
+		perror("(sem_open) No se pudo abrir semaforo");
+		return -1;
+	}
+
 	mqd_t queue = mq_open(MQ_NAME, O_WRONLY, S_IRUSR | S_IWUSR, NULL);
 	if (queue == (mqd_t) -1) {
+		sem_close(sem_mapa);
 		perror("(mq_open) No se pudo abrir la cola de mensajes de la nave");
 		return -1;
 	}
@@ -51,6 +59,8 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 	Mensaje msg;
 	strcpy(msg.texto, "NAVE_LISTO");
 	if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
+		sem_close(sem_mapa);
+		mq_close(queue);
 		perror("(mq_send) No se pudo enviar mensaje");
 		return -1;
 	}
@@ -70,11 +80,14 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 		} else {
 			perror("Nave ha sacado un mensaje invalido");
 			close(pipe_jefe[0]);
+			sem_close(sem_mapa);
 			mq_close(queue);
 			return -1;
 		}
 		memset(msg_jefe, 0, sizeof(msg_jefe));
 		if (mq_send(queue, (char*) &msg, sizeof(msg), 1) < 0) {
+			sem_close(sem_mapa);
+			mq_close(queue);
 			perror("(mq_send) No se pudo enviar mensaje");
 			return -1;
 		}
