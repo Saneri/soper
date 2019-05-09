@@ -23,15 +23,15 @@
  * @return Struct tipo_nave inicializado
  */
 tipo_nave crear_nave (int num_jefe, int num_nave, int posx, int posy) {
-	
+
 	tipo_nave new_nave;
-	new_nave.vida = VIDA_MAX; 
-	new_nave.posx = posx; 
-	new_nave.posy = posy; 
-	new_nave.equipo = num_jefe; 
+	new_nave.vida = VIDA_MAX;
+	new_nave.posx = posx;
+	new_nave.posy = posy;
+	new_nave.equipo = num_jefe;
 	new_nave.numNave = num_nave;
 	new_nave.viva = true;
-	return new_nave; 
+	return new_nave;
 }
 
 /*
@@ -49,7 +49,7 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
         }
 
         tipo_mapa *mapa = mmap(NULL, sizeof(tipo_mapa), PROT_WRITE | PROT_READ, MAP_SHARED, fd_shm, 0);
-        
+
 	if (mapa == MAP_FAILED) {
                 perror("(mmap) No se pudo mapear la memoria compartida de mapa");
                 return -1;
@@ -61,7 +61,7 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
                 return -1;
         }
 
-		
+
 	sem_t *sem_mapa;
 	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
@@ -116,7 +116,7 @@ int ejecutar_nave(int num_jefe, int num_nave, int pipe_jefe[2]) {
 			return -1;
 		}
 		memset(msg_jefe, 0, sizeof(msg_jefe));
-	
+
 	}
 	return -1;
 }
@@ -132,6 +132,9 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 	int origeny = nave->posy;
 	int equipoNave = nave->equipo;
 	int i;
+	if (nave->viva == false){
+		return 0;
+	}
 	switch (direccion){
 		case 0:
 					i = -20;
@@ -149,6 +152,13 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 											nave_atacada.vida -= ATAQUE_DANO;
 											mapa_set_nave(mapa, nave_atacada);
 										}
+										/*const char str[80];
+										strcpy(str, "ACCION ATAQUE [");
+										strcat(str, symbol_equipos[equipoNave] );
+										strcat(str, nave->numNave +1 );
+										strcat(str, "]");
+										A2] 0,3 -> 19,16: target a 40 de vida*/
+
 										return 0;
 									}
 								}
@@ -173,6 +183,13 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 											nave_atacada.vida -= ATAQUE_DANO;
 											mapa_set_nave(mapa, nave_atacada);
 										}
+										/*const char str[80];
+										strcpy(str, "ACCION ATAQUE [");
+										strcat(str, symbol_equipos[equipoNave] );
+										strcat(str, nave->numNave +1 );
+										strcat(str, "]");
+										A2] 0,3 -> 19,16: target a 40 de vida*/
+
 										return 0;
 									}
 								}
@@ -198,6 +215,13 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 											nave_atacada.vida -= ATAQUE_DANO;
 											mapa_set_nave(mapa, nave_atacada);
 										}
+										/*const char str[80];
+										strcpy(str, "ACCION ATAQUE [");
+										strcat(str, symbol_equipos[equipoNave] );
+										strcat(str, nave->numNave +1 );
+										strcat(str, "]");
+										A2] 0,3 -> 19,16: target a 40 de vida*/
+
 										return 0;
 									}
 								}
@@ -223,6 +247,13 @@ int nave_atacar(tipo_mapa *mapa, tipo_nave *nave) {
 											nave_atacada.vida -= ATAQUE_DANO;
 											mapa_set_nave(mapa, nave_atacada);
 										}
+										/*const char str[80];
+										strcpy(str, "ACCION ATAQUE [");
+										strcat(str, symbol_equipos[equipoNave] );
+										strcat(str, nave->numNave +1 );
+										strcat(str, "]");
+										A2] 0,3 -> 19,16: target a 40 de vida*/
+
 										return 0;
 									}
 								}
@@ -329,6 +360,7 @@ int nave_cambiarposicion(tipo_mapa *mapa, tipo_nave *nave, int posy, int posx){
  int nave_destruir(tipo_mapa *mapa, tipo_nave *nave) {
 	nave->vida = 0;
 	nave->viva = false;
-	mapa_clean_casilla(mapa, nave->posy, nave->posx);
+	mapa_set_num_naves(mapa, nave->equipo,mapa_get_num_naves(mapa,nave->equipo)-1);
+	mapa_set_nave(mapa, *nave);
 	return 0;
 }

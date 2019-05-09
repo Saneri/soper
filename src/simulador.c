@@ -25,26 +25,6 @@
 #include "mapa.h"
 #include "jefe.h"
 
-const int INICIO_NAVES[MAPA_MAXY][MAPA_MAXX] = {{0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
-						{1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0},
-						{2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0}};
 
 // Los recursos: 0 si no esta inicializado y 1 si hay que librar el recurso
 int sigue_jugando = 1;
@@ -76,7 +56,7 @@ void librar_recursos_proceso_simulador() {
 	if (recurso_sem_monitor) {
 		sem_close(sem_monitor);
 		sem_unlink(SEM_SYNC_MONITOR);
-	}	
+	}
 	if (recurso_sem_simjefe) {
 		sem_close(sem_simjefe);
 		sem_unlink(SEM_SYNC_SIMJEFE);
@@ -114,20 +94,20 @@ int proceso_simulador() {
 		return -1;
 	}
 
-	recurso_mqueue = 1;	
-	
+	recurso_mqueue = 1;
+
 	for (int i=0; i<N_EQUIPOS; i++) {
 		close(pipes[i][0]);
-	}	
+	}
 	sem_post(sem_monitor);
-	
+
 	/////////////////////
 	// Empieza a jugar //
 	/////////////////////
 
 	Mensaje msg;
-	char msg_sim[] = "TURNO";	
-	
+	char msg_sim[] = "TURNO";
+
 	int num_naves_total = N_EQUIPOS * N_NAVES;
 	for (int i=0; i<num_naves_total; i++) {
 		if (mq_receive(queue, (char*) &msg, sizeof(msg), NULL) == -1) {
@@ -140,7 +120,7 @@ int proceso_simulador() {
 		printf("Nuevo TURNO\n");
 		// Enviar mensaje TURNO a cada jefe
 		for (int i=0; i<N_EQUIPOS; i++) {
-			write(pipes[i][1], msg_sim, sizeof(msg_sim));  
+			write(pipes[i][1], msg_sim, sizeof(msg_sim));
 			num_naves_total += mapa_get_num_naves(mapa, i);
 			sem_post(sem_simjefe);
 		}
@@ -155,11 +135,11 @@ int proceso_simulador() {
 			printf("simulador: recibido en cola de mensajes\n");
 		}
 		sleep(TURNO_SECS);
-		// Finalizar el turno 
+		// Finalizar el turno
 		mapa_restore(mapa);
-		check_winner();	
+		check_winner();
 	}
-	
+
 	// Finalizar jefes
 	char msg_sim_fin[] = "FIN";
 	for (int i=0; i<N_EQUIPOS; i++) {
@@ -180,7 +160,7 @@ void check_winner() {
 		if (mapa->num_naves[i] > 0) {
 		       n_equipos_vivos++;
 		       ganador = i;
-		}		
+		}
 	}
 	if (n_equipos_vivos < 2) {
 		sigue_jugando = 0;
@@ -285,7 +265,7 @@ int init() {
 		perror("No se pudo agregar el manejador SIGINT");
 		return -1;
 	}
-	
+
 	// Inicializar semaforos
 	printf("Simulador gestionando semaforos\n");
 	if ((sem_monitor = sem_open(SEM_SYNC_MONITOR, O_CREAT, S_IRUSR | S_IWUSR, 0)) == SEM_FAILED) {
@@ -299,7 +279,7 @@ int init() {
 		return -1;
 	}
 	recurso_sem_simjefe = 1;
-	
+
 	if ((sem_mapa = sem_open(SEM_MAPA, O_CREAT, S_IRUSR | S_IWUSR, 1)) == SEM_FAILED) {
 		perror("(sem_open) No se pudo abrir semaforo");
 		return -1;

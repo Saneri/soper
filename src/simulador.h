@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #define N_EQUIPOS 3 // Número de equipos
-#define N_NAVES 3 // Número de naves por equipo
+#define N_NAVES 2 // Número de naves por equipo
 
 /*** SCREEN ***/
 extern char symbol_equipos[N_EQUIPOS]; // Símbolos de los diferentes equipos en el mapa (mirar mapa.c)
@@ -25,6 +25,16 @@ extern char symbol_equipos[N_EQUIPOS]; // Símbolos de los diferentes equipos en
 
 
 /*** MAPA ***/
+
+typedef struct {
+	int vida; // Vida que le queda a la nave
+	int posx; // Columna en el mapa
+	int posy; // Fila en el mapa
+	int atackx; // Equipo de la nave
+	int atacky; // Numero de la nave en el equipo
+} tipo_ataque;
+
+
 // Información de nave
 typedef struct {
 	int vida; // Vida que le queda a la nave
